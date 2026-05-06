@@ -3,7 +3,7 @@
 Ce driver en C a été développé pour interfacer un module radio **RFM69HCW** avec un microcontrôleur **STM32** en utilisant les drivers **HAL**. 
 
 ## 🚀 Lien utilisé
-https://cdn.sparkfun.com/datasheets/Wireless/General/RFM69HCW-V1.1.pdf
+Datasheet RFM69HCW : https://cdn.sparkfun.com/datasheets/Wireless/General/RFM69HCW-V1.1.pdf
 
 ## 🛠️ Configuration SPI recommandée
 Pour une communication stable, les paramètres suivants ont été validés :
