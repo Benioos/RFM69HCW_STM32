@@ -7,7 +7,9 @@ Ce driver en C a été développé pour programmer rapidement le module radio **
 ## 🛠️Fonctions implémentées actuellement
 
 **RFM69_Init**  -- Initialisation des pins SPI (Chip Select, SPI#)
+
 **RFM69_WriteReg**  -- Écriture dans un registre  
+
 **RFM69_ReadReg**  -- Lecture registre
 
 ---
