@@ -10,7 +10,13 @@ Ce driver en C a été développé pour programmer rapidement le module radio **
 
 **RFM69_WriteReg**  -- Écriture dans un registre  
 
-**RFM69_ReadReg**  -- Lecture registre
+**RFM69_SetMode**  -- Choix du mode de fonctionnement
+
+**RFM69_SetModulationType**  -- Choix modulation
+
+**RFM69_SetFrequency**  -- Choix Fréquence d'émission et réception
+
+**RFM69_getConfigData**  -- Aperçu de tous les paramètres configurés
 
 ---
 
