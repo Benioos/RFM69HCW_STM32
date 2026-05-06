@@ -1,19 +1,30 @@
 # STM32 RFM69HCW Driver (HAL Based)
 
-Ce driver en C a été développé pour interfacer un module radio **RFM69HCW** avec un microcontrôleur **STM32** en utilisant les drivers **HAL**. 
+Ce driver en C a été développé pour interfacer un module radio **RFM69HCW** avec un microcontrôleur **STM32** en utilisant les drivers **HAL**.
 
-## 🚀 Lien utilisé
-Datasheet RFM69HCW : https://cdn.sparkfun.com/datasheets/Wireless/General/RFM69HCW-V1.1.pdf
+---
 
-## 🛠️ Configuration SPI recommandée
+## Fonctions implémentées actuellement
+
+Initialisation des pins SPI (Chip Select, SPI#) : **RFM69_Init**  
+Écriture dans un registre : **RFM69_WriteReg**  
+Lecture registre : **RFM69_ReadReg**
+
+---
+
+## Configuration SPI recommandée
+
 Pour une communication stable, les paramètres suivants ont été validés :
-- **Mode :** Full-Duplex Master
-- **Baudrate :** < 4 MBits/s
-- **CPOL :** Low (0)
-- **CPHA :** 2 Edge (1) 
-- **First Bit :** MSB First
 
-## 💻 Exemple d'utilisation
+- **Mode :** Full-Duplex Master  
+- **Baudrate :** < 4 MBits/s  
+- **CPOL :** Low (0)  
+- **CPHA :** 2 Edge (1)  
+- **First Bit :** MSB First  
+
+---
+
+## Exemple d'utilisation
 
 ```c
 #include "RFM69HCW.h"
@@ -31,10 +42,12 @@ if (version == 0x24) {
     // Erreur de câblage ou de configuration SPI
 }
 ```
-
 ## 📂 Structure du projet
 - `RFM69HCW.h` : Définitions des adresses des registres et prototypes des fonctions.
 - `RFM69HCW.c` : Implémentation de la logique de communication SPI.
+
+## 🚀 Document utilisé
+Datasheet RFM69HCW : https://cdn.sparkfun.com/datasheets/Wireless/General/RFM69HCW-V1.1.pdf
 
 ## 📝 Licence
 Ce projet est développé à des fins pédagogiques. Libre à vous de l'utiliser et de l'améliorer !
