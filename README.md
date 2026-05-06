@@ -1,52 +1,53 @@
-# STM32 RFM69HCW Driver (HAL Based)
+# STM32 RFM69HCW Driver (Basée sur HAL)
 
-Ce driver en C a été développé pour interfacer un module radio **RFM69HCW** avec un microcontrôleur **STM32** en utilisant les drivers **HAL**.
-
----
-
-## Fonctions implémentées actuellement
-
-Initialisation des pins SPI (Chip Select, SPI#) : **RFM69_Init**  
-Écriture dans un registre : **RFM69_WriteReg**  
-Lecture registre : **RFM69_ReadReg**
+Ce driver en C a été développé pour programmer rapidement le module radio **RFM69HCW** avec un microcontrôleur **STM32** en utilisant **HAL**.
 
 ---
 
-## Configuration SPI recommandée
+## 🛠️Fonctions implémentées actuellement
 
-Pour une communication stable, les paramètres suivants ont été validés :
+**RFM69_Init**  -- Initialisation des pins SPI (Chip Select, SPI#)
+**RFM69_WriteReg**  -- Écriture dans un registre  
+**RFM69_ReadReg**  -- Lecture registre
 
+---
+
+## 💻 Configuration SPI recommandée
+
+Le SPI a été configurée de la façon suivant:
+
+- **Frame Format :** Motorola
 - **Mode :** Full-Duplex Master  
-- **Baudrate :** < 4 MBits/s  
-- **CPOL :** Low (0)  
-- **CPHA :** 2 Edge (1)  
+- **CPOL :** Low   
+- **CPHA :** 2 Edge  
 - **First Bit :** MSB First  
 
 ---
 
-## Exemple d'utilisation
+## 🚀 Intégration dans un nouveau projet
 
 ```c
 #include "RFM69HCW.h"
 
-// 1. Initialisation du driver avec l'instance SPI et le port du CS
-RFM69_Init(&hspi1, GPIOC, GPIO_PIN_7);
-
-// 2. Vérification de la communication (Lecture du registre de version)
-// La valeur attendue pour un RFM69HCW est 0x24
-uint8_t version = RFM69_ReadReg(REG_VERSION);
-
-if (version == 0x24) {
-    // Communication établie avec succès !
-} else {
-    // Erreur de câblage ou de configuration SPI
+int main(void)
+{
+      RFM69_Init(&hspi1, GPIOC, GPIO_PIN_7);
+      while (1)
+      {
+            uint8_t version = RFM69_ReadReg(RegVersion);
+            if (version == 0x24) {
+                // Communication établie avec succès !
+            } else {
+                // Erreur de câblage ou de configuration SPI
+            }
+      }
 }
 ```
 ## 📂 Structure du projet
 - `RFM69HCW.h` : Définitions des adresses des registres et prototypes des fonctions.
 - `RFM69HCW.c` : Implémentation de la logique de communication SPI.
 
-## 🚀 Document utilisé
+## Document utilisé
 Datasheet RFM69HCW : https://cdn.sparkfun.com/datasheets/Wireless/General/RFM69HCW-V1.1.pdf
 
 ## 📝 Licence
