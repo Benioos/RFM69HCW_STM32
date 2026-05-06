@@ -74,6 +74,6 @@ uint8_t RFM69_ReadReg(uint8_t reg);
 /*
  * Get information of Configuration
  */
-void getConfigData();
+void RFM69_getConfigData();
 
 #endif /* INC_RFM69HCW_H_ */

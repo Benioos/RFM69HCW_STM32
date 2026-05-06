@@ -120,7 +120,7 @@ void RFM69_SetModulationType(RFM69_DataProcessingMode_t mode, RFM69_Modulation_t
 /*
  * Get information of Configuration
  */
-void getConfigData()
+void RFM69_getConfigData()
 {
 	uint8_t val = RFM69_ReadReg(0x02);
 
