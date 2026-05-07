@@ -324,25 +324,8 @@ void RFM69_DEBUG_MessageSendOK(void)
  */
 uint8_t RFM69_ReceiveMessage(uint8_t* buffer, uint8_t maxLen)
 {
-    // Vérifier si le bit PayloadReady (bit 2) est à 1
-    if ((RFM69_ReadReg(0x28) & 0x04) == 0x00) return 0;
-
-    // Passage en Standby pour arrêter la radio et lire le FIFO
-    RFM69_SetMode(RFM69_MODE_STDBY);
-
-    // Lecture du premier octet : la longueur du message (mode variable)
-    uint8_t len = RFM69_ReadReg(0x00);
-
-    // Lecture des données
-    for (uint8_t i = 0; i < len; i++) {
-        uint8_t data = RFM69_ReadReg(0x00);
-        if (i < maxLen) buffer[i] = data;
-    }
-
-    // Très important : se remettre en mode RX pour attendre le suivant
-    RFM69_SetMode(RFM69_MODE_RX);
-
-    return len;
+ // Next Step
+	return 0;
 }
 
 
