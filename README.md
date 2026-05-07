@@ -1,11 +1,12 @@
 # STM32 RFM69HCW/SX1231 Driver (Basée sur HAL)
 
-Ce driver, en C, a été développé pour programmer rapidement le module radio **RFM69HCW** avec un microcontrôleur **STM32**.
-Ce driver utilise **HAL**.
+This C driver was developed to quickly program the **RFM69HCW** radio module using an **STM32** microcontroller.
+
+This driver uses **HAL**.
 
 ---
 
-## 🛠️Fonctions implémentées actuellement
+## ✅Currently implemented features
 
 | Fonction | Use | Example |
 | :--- | :---: | :--- |
@@ -18,14 +19,22 @@ Ce driver utilise **HAL**.
 | **RFM69_SetDataShaping** | Choice of Data Shaping  |`RFM69_SHAPING_NONE`<br> `RFM69_SHAPING_Gaussianfilter_BT1`<br> `RFM69_SHAPING_Gaussianfilter_BT05`<br> `RFM69_SHAPING_Gaussianfilter_BT03`  |
 | **RFM69_SetFrequencyTo433** | Set Frequency to 433  | Nothing (void) |
 | **RFM69_SetBitrate** | Set bitrate of communication  | RFM69_SetBitrate(4800); |
+| **RFM69_ConfigSync** | Chose type of syncing between two module  |`RFM69_SYNC_OFF`<br> `RFM69_SYNC_ON`<br>`RFM69_FIFO_FILL_IF_SYNC`<br>`RFM69_FIFO_FILL_ALWAYS`<br>`RFM69_SYNC_TOLERANCE_ERROR_0`<br>`RFM69_SYNC_TOLERANCE_ERROR_1`<br>`RFM69_SYNC_TOLERANCE_ERROR_2`<br>`RFM69_SYNC_TOLERANCE_ERROR_3`<br>`RFM69_SYNC_TOLERANCE_ERROR_4`<br>`RFM69_SYNC_TOLERANCE_ERROR_5`<br>`RFM69_SYNC_TOLERANCE_ERROR_6`<br>`RFM69_SYNC_TOLERANCE_ERROR_7`<br> |
+| **RFM69_SetSyncValues** | Set Key to link two modules. <br> **Have to be the same key on both module to communicate**  <br> **Max key lenght 8**  |  uint8_t mykey[] = {0x42, 0x24}; <br> RFM69_SetSyncValues(mykey, 2); |
+| **RFM69_AutoSetFdev** | Select auto the space au frequency depending of the bitrates  |RFM69_AutoSetFdev(); |
 | **RFM69_getConfigData** | Get all parameters set in one command  | Nothing (void) |
 
+## 🛠️features on work
+
+| Fonction | Use | Example |
+| :--- | :---: | :--- |
+| **RFM69_SetPacketConfig** |Select a flexible lenght for message |RFM69_AutoSetFdev(); |
 
 ---
 
-## 💻 Configuration SPI recommandée
+## 💻 SPI recommanded configuration
 
-Le SPI a été configurée de la façon suivant:
+The SPI was configured as follows:
 
 - **Frame Format :** Motorola
 - **Mode :** Full-Duplex Master  
@@ -35,7 +44,7 @@ Le SPI a été configurée de la façon suivant:
 
 ---
 
-## 🚀 Intégration dans un nouveau projet
+## 🚀 Integration into a new project
 
 ```c
 #include "RFM69HCW.h"
@@ -54,12 +63,13 @@ int main(void)
       }
 }
 ```
-## 📂 Structure du projet
-- `RFM69HCW.h` : Définitions des adresses des registres et prototypes des fonctions.
-- `RFM69HCW.c` : Implémentation de la logique de communication SPI.
+## 📂 Structure of the project
+- `RFM69HCW.h` : Definitions of register addresses and function prototypes.
+- `RFM69HCW.c` : Implémentation function in C.
 
-## Document utilisé
+## Useful Documents
 Datasheet RFM69HCW : https://cdn.sparkfun.com/datasheets/Wireless/General/RFM69HCW-V1.1.pdf
 
 ## 📝 Licence
-Ce projet est développé à des fins pédagogiques. Libre à vous de l'utiliser et de l'améliorer !
+EN : This project was developed for educational purposes. Feel free to use and improve it!
+FR : Ce projet est développé à des fins pédagogiques. Libre à vous de l'utiliser et de l'améliorer !
