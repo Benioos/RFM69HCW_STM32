@@ -24,13 +24,10 @@ This driver uses **HAL**.
 | **RFM69_AutoSetFdev** | Select auto the space au frequency depending of the bitrates  |RFM69_AutoSetFdev(); |
 | **RFM69_getConfigData** | Get all parameters set in one command  | Nothing (void) |
 
-## 🛠️features on work
-
-| Fonction | Use | Example |
-| :--- | :---: | :--- |
-| **RFM69_SetPacketConfig** |Select a flexible lenght for message |RFM69_AutoSetFdev(); |
-
 ---
+
+
+
 
 ## 💻 SPI recommanded configuration
 
@@ -43,7 +40,10 @@ The SPI was configured as follows:
 - **First Bit :** MSB First  
 
 ---
-
+## ⚠️ Important notes
+- Key Sync have to be the same on each module
+- Bitrates have to be the same on each module
+  
 ## 🚀 Integration into a new project
 
 ```c
