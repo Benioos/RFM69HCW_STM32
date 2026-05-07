@@ -7,17 +7,19 @@ Ce driver utilise **HAL**.
 
 ## 🛠️Fonctions implémentées actuellement
 
-**RFM69_Init**  -- Initialisation des pins SPI (Chip Select, SPI#)
+| Fonction | Use | Example |
+| :--- | :---: | :--- |
+| **RFM69_Init** | Initialisation des pins SPI (Chip Select, SPI#) | RFM69_Init(&hspi1, GPIOC, GPIO_PIN_7); |
+| **RFM69_WriteReg** | Write a value in any register | RFM69_WriteReg(0x37, 0x90); |
+| **RFM69_ReadReg** | Read a value in any register | uint8_t currentVal = RFM69_ReadReg(0x02); |
+| **RFM69_SetMode** | Choice of working mode  |`RFM69_MODE_SLEEP`<br> `RFM69_MODE_FREQUENCYSYNTHER`  <br> `RFM69_MODE_STDBY` <br> `RFM69_MODE_RX` <br> `RFM69_MODE_TX` |
+| **RFM69_SetDataProcessingMode** | Choice of Data Processing  |`RFM69_PACKET_MODE`<br> `RFM69_CONTINUOUS_SYNC`  <br> `RFM69_CONTINUOUS_RAW` |
+| **RFM69_SetModulationType** | Choice of Modulation  |`RFM69_MODUL_FSK`<br> `RFM69_MODUL_OOK`  |
+| **RFM69_SetDataShaping** | Choice of Data Shaping  |`RFM69_SHAPING_NONE`<br> `RFM69_SHAPING_Gaussianfilter_BT1`<br> `RFM69_SHAPING_Gaussianfilter_BT05`<br> `RFM69_SHAPING_Gaussianfilter_BT03`  |
+| **RFM69_SetFrequencyTo433** | Set Frequency to 433  | Nothing (void) |
+| **RFM69_SetBitrate** | Set bitrate of communication  | RFM69_SetBitrate(4800); |
+| **RFM69_getConfigData** | Get all parameters set in one command  | Nothing (void) |
 
-**RFM69_WriteReg**  -- Écriture dans un registre  
-
-**RFM69_SetMode**  -- Choix du mode de fonctionnement
-
-**RFM69_SetModulationType**  -- Choix modulation
-
-**RFM69_SetFrequency**  -- Choix Fréquence d'émission et réception
-
-**RFM69_getConfigData**  -- Aperçu de tous les paramètres configurés
 
 ---
 
