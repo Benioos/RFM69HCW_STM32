@@ -1,6 +1,7 @@
-# STM32 RFM69HCW Driver (Basée sur HAL)
+# STM32 RFM69HCW/SX1231 Driver (Basée sur HAL)
 
-Ce driver en C a été développé pour programmer rapidement le module radio **RFM69HCW** avec un microcontrôleur **STM32** en utilisant **HAL**.
+Ce driver, en C, a été développé pour programmer rapidement le module radio **RFM69HCW** avec un microcontrôleur **STM32**.
+Ce driver utilise **HAL**.
 
 ---
 
