@@ -66,6 +66,7 @@ The SPI was configured as follows:
 
 - `RFM69_Init` → Initialize SPI interface and Chip Select pin
 - `RFM69_SetMode` → Select operating mode
+- `RFM69_GetMode` → Get operating mode
 - `RFM69_SetKeyValues_Sync` → Set Key to link two modules.
 
 <details>
@@ -75,6 +76,7 @@ The SPI was configured as follows:
 | :--- | :---: | :--- |
 | `RFM69_Init` | Initialize SPI interface and Chip Select pin | ```RFM69_Init(&hspi1, GPIOC, GPIO_PIN_7);``` |
 | `RFM69_SetMode` | Select operating mode  |`RFM69_MODE_SLEEP`<br> `RFM69_MODE_FREQUENCYSYNTHER`  <br> `RFM69_MODE_STDBY` <br> `RFM69_MODE_RX` <br> `RFM69_MODE_TX` |
+| `RFM69_GetMode` | Get operating mode  | |
 | `RFM69_SetKeyValues_Sync` | Set Key to link two modules. <br> **Must be identical on both modules**  <br> ***Max key lenght 8***  |  ```uint8_t mykey[] = {0x42, 0x24};``` <br> ```RFM69_SetSyncValues(mykey, 2);``` |
 
 </details>
@@ -115,7 +117,9 @@ The SPI was configured as follows:
 
 ### 📤 Transmission
 
-- `RFM69_PowerAmplifierSelection` → Choice of Power Amplifier ***Pout = PA_... + OutputPower [dBm]*** 
+- `RFM69_PowerAmplifierSelection` → Choice of Power Amplifier ***Pout = PA_... + OutputPower [dBm]***
+- `RFM69_FlushFIFO` → Flush FIFO
+- `RFM69_SendMessage` →  Send message
 
 <details>
 <summary> Full reference </summary>
@@ -123,6 +127,8 @@ The SPI was configured as follows:
 | Transmission | Description | Example/Available Modes |
 | :--- | :---: | :--- |
 | `RFM69_PowerAmplifierSelection` | Choice of Power Amplifier <br> ***Pout = PA_... + OutputPower [dBm]***  |`PA_0 => Start from -18 to +13 dbm `<br> `PA_1 => Start from -18 to +13 dbm`<br> `PA_1_2 => Start from -14 to +17 dbm `<br> `PA_HIGH_POWER => Start from -11 to +20 dbm`<br>  |
+| `RFM69_FlushFIFO` | Flush FIFO  | |
+| `RFM69_SendMessage` | Send message   uint8_t message[] = "SATELLITE_TEST";<br>RFM69_SendMessage( message, 14);  |
 
 </details>
 
@@ -132,6 +138,7 @@ The SPI was configured as follows:
 - `RFM69_SetLnaImpedance` → Set LNA Impedance (Z) In
 - `RFM69_SetLnaGain` → Set LNA Gain
 - `RFM69_GetLnaStatus` → Get LNA Configuration
+- `RFM69_ReceiveMessage` → Read a message received
 
 <details>
 <summary> Full reference </summary>
@@ -142,14 +149,17 @@ The SPI was configured as follows:
 | `RFM69_SetLnaImpedance` | Set LNA Impedance (Z) In  | `LNA_Impedance_50`<br> `LNA_Impedance_200`<br> |
 | `RFM69_SetLnaGain` | Set LNA Gain  | `LNA_GAIN_AUTO`<br> `LNA_GAIN_G1`<br>`LNA_GAIN_G2`<br>`LNA_GAIN_G3`<br>`LNA_GAIN_G4`<br>`LNA_GAIN_G4`<br>`LNA_GAIN_G5`<br>`LNA_GAIN_G6`<br> |
 | `RFM69_GetLnaStatus` | Get LNA Configuration  | |
+| `RFM69_ReceiveMessage` | Read a message received  | uint8_t receivedLen = RFM69_ReceiveMessage(rxBuffer, 64); |
 </details>
 
 ### 🔄 Automatic Frequency Correction AFC
 
 - `RFM69_StartAFC` → Start Frequency Recalibration AFC 
 - `RFM69_Status_RecalibrationFrequencyAFC` → Get Status of the Automatic Recalibration Frequency Correction AFC
-- `RFM69_GetAFCCorrectionHz` → Read AFC Correction in Hz 
-
+- `RFM69_GetAFCCorrectionHz` → Read AFC Correction in Hz
+- `RFM69_ClearAfc` → Clear Frequency Recalibration AFC
+- `RFM69_SetAfcAuto` → Activate/Deactive Automatic Frequency Recalibration AFC
+- `RFM69_SetAfcAutoclear` → Activate/Deactive Clearing Automatic Frequency Recalibration AFC
 
 <details>
 <summary> Full reference </summary>
@@ -159,6 +169,9 @@ The SPI was configured as follows:
 | `RFM69_StartAFC` | Start Frequency Recalibration AFC  ||
 | `RFM69_Status_RecalibrationFrequencyAFC` | Get Status of the Automatic Recalibration Frequency Correction AFC  | |
 | `RFM69_GetAFCCorrectionHz` | Read AFC Correction in Hz  | |
+| `RFM69_ClearAfc` | Clear Frequency Recalibration AFC  | |
+| `RFM69_SetAfcAuto` | Activate/Deactive Automatic Frequency Recalibration AFC  |`AFC_AUTO_OFF`<br>`AFC_AUTO_ON`<br> |
+| `RFM69_SetAfcAutoclear` | Activate/Deactive Automatic Frequency Recalibration AFC  | `AFC_AUTOCLEAR_OFF`<br>`AFC_AUTOCLEAR_ON`<br>|
 
 </details>
 
