@@ -22,12 +22,11 @@ This driver uses **HAL**.
 | **RFM69_AutoMessageDetectionReceive_Config** | Chose type of syncing between two module  |`RFM69_SYNC_OFF`<br> `RFM69_SYNC_ON`<br>`RFM69_FIFO_FILL_IF_SYNC`<br>`RFM69_FIFO_FILL_ALWAYS`<br>`RFM69_SYNC_TOLERANCE_ERROR_0`<br>`RFM69_SYNC_TOLERANCE_ERROR_1`<br>`RFM69_SYNC_TOLERANCE_ERROR_2`<br>`RFM69_SYNC_TOLERANCE_ERROR_3`<br>`RFM69_SYNC_TOLERANCE_ERROR_4`<br>`RFM69_SYNC_TOLERANCE_ERROR_5`<br>`RFM69_SYNC_TOLERANCE_ERROR_6`<br>`RFM69_SYNC_TOLERANCE_ERROR_7`<br> |
 | **RFM69_SetKeyValues_Sync** | Set Key to link two modules. <br> **Have to be the same key on both module to communicate**  <br> **Max key lenght 8**  |  uint8_t mykey[] = {0x42, 0x24}; <br> RFM69_SetSyncValues(mykey, 2); |
 | **RFM69_AutoSetFdev** | Select auto the space au frequency depending of the bitrates  |RFM69_AutoSetFdev(); |
-| **RFM69_PowerAmplifierSelection** | Choice of Power Amplifier  |`PA_0`<br> `PA_1`<br> `PA_1_2`<br> `PA_HIGH_POWER`  |
+| **RFM69_PowerAmplifierSelection** | Choice of Power Amplifier <br> ***Pout = PA_... + OutputPower [dBm]***  |`PA_0 => Start from -18 to +13 dbm `<br> `PA_1 => Start from -18 to +13 dbm`<br> `PA_1_2 => Start from -14 to +17 dbm `<br> `PA_HIGH_POWER => Start from -11 to +20 dbm`<br>  |
 | **RFM69_getConfigData** | Get all parameters set in one command  | Nothing (void) |
 
 
 ---
-
 
 
 
