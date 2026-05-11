@@ -26,6 +26,9 @@ This driver uses **HAL**.
 | **RFM69_PowerAmplifierSelection** | Choice of Power Amplifier <br> ***Pout = PA_... + OutputPower [dBm]***  |`PA_0 => Start from -18 to +13 dbm `<br> `PA_1 => Start from -18 to +13 dbm`<br> `PA_1_2 => Start from -14 to +17 dbm `<br> `PA_HIGH_POWER => Start from -11 to +20 dbm`<br>  |
 | **RFM69_getConfigData** | Get all parameters set in one command  | Nothing (void) |
 | **RFM69_SetOverloadCurrentProtection** | Enable or disable the overload current protection for the PA  | TO DO |
+| **RFM69_SetLnaImpedance** | Set LNA Impedance (Z) In  | `LNA_Impedance_50`<br> `LNA_Impedance_200`<br> |
+| **RFM69_SetLnaGain** | Set LNA Gain  | `LNA_GAIN_AUTO`<br> `LNA_GAIN_G1`<br>`LNA_GAIN_G2`<br>`LNA_GAIN_G3`<br>`LNA_GAIN_G4`<br>`LNA_GAIN_G4`<br>`LNA_GAIN_G5`<br>`LNA_GAIN_G6`<br> |
+| **RFM69_GetLnaStatus** | Get LNA Configuration  | Nothing (void) |
 
 ---
 
