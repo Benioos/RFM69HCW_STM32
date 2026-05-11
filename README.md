@@ -85,6 +85,14 @@ RFM69_SetMode(RFM69_MODE_RX);
 
 ---
 
+## 🧠 Registers
+ 
+| Register | Address | Description | Expected value |
+| :--- | :---: | :--- | :---: |
+| `RegVersion` | `0x10` | Chip version register (used to verify SPI communication) | `0x24` |
+
+---
+
 ## 💻 SPI recommanded configuration
 
 The SPI was configured as follows:
@@ -96,6 +104,9 @@ The SPI was configured as follows:
 - **First Bit :** MSB First  
 
 ---
+
+
+
 ## ⚠️ Important notes
 - Key Sync have to be the same on each module
 - Bitrates have to be the same on each module
