@@ -25,7 +25,7 @@ This driver uses **HAL**.
 | **RFM69_AutoSetFdev** | Select auto the space au frequency depending of the bitrates  |RFM69_AutoSetFdev(); |
 | **RFM69_PowerAmplifierSelection** | Choice of Power Amplifier <br> ***Pout = PA_... + OutputPower [dBm]***  |`PA_0 => Start from -18 to +13 dbm `<br> `PA_1 => Start from -18 to +13 dbm`<br> `PA_1_2 => Start from -14 to +17 dbm `<br> `PA_HIGH_POWER => Start from -11 to +20 dbm`<br>  |
 | **RFM69_getConfigData** | Get all parameters set in one command  | Nothing (void) |
-
+| **RFM69_SetOverloadCurrentProtection** | Enable or disable the overload current protection for the PA  | TO DO |
 
 ---
 
