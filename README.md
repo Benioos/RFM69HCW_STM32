@@ -8,20 +8,31 @@ This library provides a simple and efficient library for configuring and control
 ## 🚀 QUICK START 
 
 ```c
-#include "RFM69HCW.h"
+#include <RFM69HCW.h>
 
-RFM69_Init(&hspi1, GPIOC, GPIO_PIN_7);
+int main(void)
+{
+    RFM69_Init(&hspi1, GPIOC, GPIO_PIN_7);
+    RFM69_SetMode(RFM69_MODE_STDBY);
+    RFM69_SetFrequencyTo433();
+    RFM69_SetDataProcessingMode(RFM69_PACKET_MODE);
+    RFM69_SetModulationType(RFM69_MODUL_FSK);
+    RFM69_SetDataShaping(RFM69_SHAPING_Gaussianfilter_BT1);
+    RFM69_getConfigData();
+    RFM69_SetBitrate(4800);
+    RFM69_AutoMessageDetectionReceive_Config(RFM69_SYNC_ON, RFM69_FIFO_FILL_IF_SYNC, 2, RFM69_SYNC_TOLERANCE_ERROR_2);
+    uint8_t mykey[] = {0x42, 0x24};
+    RFM69_SetKeyValues_Sync(mykey, 2);
+    RFM69_AutoSetFdev();
+    RFM69_SetPacketConfig();
+  while (1)
+  {
+    uint8_t message[] = "SATELLITE_TEST";
+    RFM69_SendMessage( message, 14);
 
-RFM69_SetMode(RFM69_MODE_STDBY);
+  }
+}
 
-RFM69_SetFrequencyTo433();
-
-RFM69_SetBitrate(4800);
-
-uint8_t key[] = {0x42, 0x24};
-RFM69_SetSyncValues(key, 2);
-
-RFM69_SetMode(RFM69_MODE_RX);
 
 ```
 ## 💻 SPI recommanded configuration
