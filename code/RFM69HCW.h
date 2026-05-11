@@ -13,17 +13,66 @@
 #include <stdio.h>
 
 #define RegVersion 0x10 // Version code of the chips
+
 #define RegFrfMsb 0x07  // MSB of the RF carrier frequency
 #define RegFrfMid 0x08	// Middle byte of the RF carrier frequency
 #define RegFrfLsb 0x09  // LSB of the RF carrier frequency
+
 #define RegOpMode 0x01  // Transceiver's operating modes
+
+#define RegDataModul 0x02 // DataOperationMode
+
+#define RegBitrateMsb 0x03 // Bit Rate setting, Most Significant Bits
+#define RegBitrateLsb 0x04 // Bit Rate setting, Least Significant Bits
+
+#define RegSyncConfig 0x2E // Sync Word Recognition control
+#define  RegSyncValue 0x2F // Sync Word bytes, 1 through 8
+
+#define RegFdevMsb 0x05 // Frequency Deviation setting, Most Significant Bits
+#define RegFdevLsb 0x06 // Frequency Deviation setting, Least Significant Bits
+
+#define FIFO 0x28 // Message to send
+#define RegIrqFlagsFIFO  0x28 //Satus register FIFO handling flags
+#define RegIrqFlagsPLL  0x27 //Satus register PLL Lock State Timeout...
+#define RegFIFO 0x00 // Register for text to send
+
+#define RegPaLevel 0x11 // PA selection and Output Power control
+#define RegRssiValue 0x24 // RSSI value in dBm
+#define RegLna 0x18 // LNA settings
+
+#define RegAfcLsb 0x20 // LSB of the frequency correction of the AFC
+#define RegAfcMsb 0x1F // MSB of the frequency correction of the AFC
+#define RegAfcFei 0x1E // AFC and FEI control and status
+#define RegFeiMsb 0x21 // MSB of the calculated frequency error
+#define RegFeiLsb 0x22 // LSB of the calculated frequency error
+
+#define RegTemp1 0x4E // Temperature Sensor control
+
 #define REG_PACKETCONFIG1 0x37 // PacketConfig
 
+#define PLLock 0x10
 #define PLLock 0x10
 #define TxReady 0x20
 #define PacketSend 0x08
 
+#define FStep 61 //Hz
+
 #define TimeoutPacketNotSend 500 // Time before error when packet not send
+
+/*
+ * Activate And Deactivate all DEBUG PRINTF in one time !
+ * You only need to comment or uncomment the line below
+ */
+#define RFM69_DEBUG_ENABLED
+
+#ifdef RFM69_DEBUG_ENABLED
+    #define RFM69_printf(...) printf(__VA_ARGS__)
+#else
+    #define RFM69_printf(...)
+#endif
+
+
+
 
 /*
  * Init SPI Pin and CS pin
@@ -41,6 +90,11 @@ typedef enum {
     RFM69_MODE_RX      = 0x10
 } RFM69_Mode_t;
 void RFM69_SetMode(RFM69_Mode_t mode);
+
+/*
+ * Get Actual Mode
+ */
+RFM69_Mode_t RFM69_GetMode(void);
 
 /*
  * Data Processing Mode
@@ -140,23 +194,124 @@ void RFM69_AutoSetFdev(void);
 void RFM69_SetPacketConfig(void);
 
 /*
+ * Flush FIFO
+ */
+void RFM69_FlushFIFO(void);
+
+/*
  * Send Message
  */
 void RFM69_SendMessage(uint8_t* payload, uint8_t len);
 
 /*
- * ABORD MESSAGE
+ * Power Amplifier Selection
  */
-void abord(void);
+typedef enum {
+    PA_0,           // Sortie RFIO (-18 à +13 dBm)
+    PA_1,           // Sortie ANT (-18 à +13 dBm)
+    PA_1_2,         // Sortie ANT (-14 à +17 dBm)
+    PA_HIGH_POWER   // Sortie ANT (-11 à +20 dBm) NOT IMPLEMENTED YET
+} RFM69_PA_Select_t;
+void RFM69_PowerAmplifierSelection(RFM69_PA_Select_t pa, int8_t dbm_step);
 
 /*
- * Message Well Send
+ * Read RSSI in dBm
  */
-void RFM69_DEBUG_MessageSendOK(void);
+uint8_t RFM69_RSSI(void);
 
 
 /*
  * Read Message
  */
 uint8_t RFM69_ReceiveMessage(uint8_t* buffer, uint8_t maxLen);
+
+/*
+ * Set LNA Impedance
+ */
+typedef enum {
+    LNA_Impedance_50   = 0x00, // Standard
+	LNA_Impedance_200  = 0x80  // High impedance
+} RFM69_LnaZin_t;
+void RFM69_SetLnaImpedance(RFM69_LnaZin_t zin);
+
+/*
+ * LNA Gain
+ */
+typedef enum {
+    LNA_GAIN_AUTO = 0x00, // AGC (Automatique)
+    LNA_GAIN_G1   = 0x01, // Max Gain
+    LNA_GAIN_G2   = 0x02,
+    LNA_GAIN_G3   = 0x03,
+    LNA_GAIN_G4   = 0x04,
+    LNA_GAIN_G5   = 0x05,
+    LNA_GAIN_G6   = 0x06  // Min Gain
+} RFM69_LnaGain_t;
+void RFM69_SetLnaGain(RFM69_LnaGain_t gain);
+
+/*
+ * Get LNA Status
+ */
+void RFM69_GetLnaStatus(void);
+
+/*
+ * GET AFC Correction Hz
+ */
+int32_t RFM69_GetAFCCorrectionHz(void);
+
+/*
+ * GET Frequency Error FEI Hz
+ */
+int32_t RFM69_GetFrequencyErrorFeiHz(void);
+
+/*
+ * Get Status of Reading Error Frequency
+ */
+uint8_t RFM69_Status_ReadingErrorFrequency(void);
+
+/*
+ * Get Status of Frequency recalibration AFC
+ */
+uint8_t RFM69_Status_RecalibrationFrequencyAFC(void);
+
+/*
+ * Get Error Frequency FEI
+ */
+void RFM69_StartFEI(void);
+
+/*
+ * Start Frequency Recalibration AFC
+ */
+void RFM69_StartAFC(void);
+
+/*
+ * Clear Frequency Recalibration AFC
+ */
+void RFM69_ClearAfc(void);
+
+/*
+ * Activate/Deactive Automatic Frequency Recalibration AFC
+ */
+typedef enum {
+    AFC_AUTO_OFF = 0,
+    AFC_AUTO_ON  = 1
+} RFM69_AfcAuto_t;
+void RFM69_SetAfcAuto(RFM69_AfcAuto_t state);
+
+/*
+ * Activate/Deactive Clearing Automatic Frequency Recalibration AFC
+ */
+typedef enum {
+    AFC_AUTOCLEAR_OFF = 0,
+    AFC_AUTOCLEAR_ON  = 1
+} RFM69_AfcAutoclear_t;
+void RFM69_SetAfcAutoclear(RFM69_AfcAutoclear_t state);
+
+/*
+ * Get Internal Temperature
+ */
+uint8_t RFM69_GetTemperature(void);
+
+
+
+
 #endif /* INC_RFM69HCW_H_ */

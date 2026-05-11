@@ -53,7 +53,7 @@ uint8_t RFM69_ReadReg(uint8_t reg)
     uint8_t rx[2];
 
     tx[0] = reg & 0x7F;  // read (bit7 = 0)
-    tx[1] = 0x00;        // unused
+    tx[1] = 0x00;        // unused in this case
 
     HAL_GPIO_WritePin(rfm69_cs_port, rfm69_cs_pin, GPIO_PIN_RESET);
 
@@ -69,9 +69,9 @@ uint8_t RFM69_ReadReg(uint8_t reg)
  */
 void RFM69_SetFrequencyTo433(void)
 {
-	  RFM69_WriteReg(0x07, 0x6C);
-	  RFM69_WriteReg(0x08, 0x40);
-	  RFM69_WriteReg(0x09, 0x00);
+	  RFM69_WriteReg(RegFrfMsb, 0x6C);
+	  RFM69_WriteReg(RegFrfMid, 0x40);
+	  RFM69_WriteReg(RegFrfLsb, 0x00);
 }
 
 /*
@@ -79,7 +79,7 @@ void RFM69_SetFrequencyTo433(void)
  */
 void RFM69_SetMode(RFM69_Mode_t mode)
 {
-    RFM69_WriteReg(0x01, (uint8_t)mode);
+    RFM69_WriteReg(RegOpMode, (uint8_t)mode);
 
     if (mode != RFM69_MODE_SLEEP) {
         HAL_Delay(1);
@@ -87,13 +87,22 @@ void RFM69_SetMode(RFM69_Mode_t mode)
 }
 
 /*
+ * Get Actual Mode
+ */
+RFM69_Mode_t RFM69_GetMode(void)
+{
+    uint8_t val = RFM69_ReadReg(RegOpMode);
+    return (RFM69_Mode_t)(val & 0x1C);
+}
+
+/*
  * Data Processing Mode
  */
 void RFM69_SetDataProcessingMode(RFM69_DataProcessingMode_t mode)
 {
-    uint8_t currentVal = RFM69_ReadReg(0x02);
+    uint8_t currentVal = RFM69_ReadReg(RegDataModul);
     uint8_t newVal = (currentVal & 0x9F) | (uint8_t)mode;
-    RFM69_WriteReg(0x02, newVal);
+    RFM69_WriteReg(RegDataModul, newVal);
 }
 
 /*
@@ -101,10 +110,10 @@ void RFM69_SetDataProcessingMode(RFM69_DataProcessingMode_t mode)
  */
 void RFM69_SetModulationType(RFM69_Modulation_t modulation)
 {
-    uint8_t currentVal = RFM69_ReadReg(0x02);
+    uint8_t currentVal = RFM69_ReadReg(RegDataModul);
     uint8_t newVal = (currentVal & 0xE7) | (uint8_t)modulation;
 
-    RFM69_WriteReg(0x02, newVal);
+    RFM69_WriteReg(RegDataModul, newVal);
 }
 
 /*
@@ -112,19 +121,17 @@ void RFM69_SetModulationType(RFM69_Modulation_t modulation)
  */
 void RFM69_SetDataShaping(RFM69_Data_Shaping_t shaping)
 {
-    uint8_t currentVal = RFM69_ReadReg(0x02);
-    uint8_t modulation = (currentVal & 0x18); // On récupère la modulation actuelle pour la sécurité
+    uint8_t currentVal = RFM69_ReadReg(RegDataModul);
+    uint8_t modulation = (currentVal & 0x18);
 
-    // Sécurité pour le mode OOK
     if (modulation == RFM69_MODUL_OOK && shaping == RFM69_SHAPING_Gaussianfilter_BT03) {
-        printf("Warning: Shaping BT0.3 incompatible with OOK. Forcing NONE.\r\n");
+    	RFM69_printf("Warning: Shaping BT0.3 incompatible with OOK. Forcing NONE.\r\n");
         shaping = RFM69_SHAPING_NONE;
     }
 
-    // Effacer les anciens bits 1-0 (Masque 0xFC = 1111 1100) puis appliquer le shaping
     uint8_t newVal = (currentVal & 0xFC) | (uint8_t)shaping;
 
-    RFM69_WriteReg(0x02, newVal);
+    RFM69_WriteReg(RegDataModul, newVal);
 }
 
 /*
@@ -132,7 +139,7 @@ void RFM69_SetDataShaping(RFM69_Data_Shaping_t shaping)
  */
 void RFM69_SetBitrate(uint32_t bitrate)
 {
-    uint8_t msb = 0x1A; // Valeur par défaut (4.8kbps)
+    uint8_t msb = 0x1A; //Default value of 4800
     uint8_t lsb = 0x0B;
 
     switch (bitrate)
@@ -163,12 +170,12 @@ void RFM69_SetBitrate(uint32_t bitrate)
             break;
         default:
         	msb = 0x1A; lsb = 0x0B;
-            printf("Warning: Bitrate non standard. Utilisation de 4.8kbps par defaut.\r\n");
+        	RFM69_printf("Warning: Bitrate non standard. Utilisation de 4.8kbps par defaut.\r\n");
             break;
     }
 
-    RFM69_WriteReg(0x03, msb);
-    RFM69_WriteReg(0x04, lsb);
+    RFM69_WriteReg(RegBitrateMsb, msb);
+    RFM69_WriteReg(RegBitrateLsb, lsb);
 }
 
 /*
@@ -181,12 +188,12 @@ void RFM69_AutoMessageDetectionReceive_Config(RFM69_SyncState_t state, RFM69_Fif
 
     uint8_t config = (uint8_t)state | (uint8_t)fill | ((size_of_key - 1) << 3) | (uint8_t)tol;
 
-    RFM69_WriteReg(0x2E, config);
+    RFM69_WriteReg(RegSyncConfig, config);
 }
 
 
 /*
- * Word for synchronisation
+ * Word for Synchronization
  */
 void RFM69_SetKeyValues_Sync(uint8_t *key, uint8_t len)
 {
@@ -194,7 +201,7 @@ void RFM69_SetKeyValues_Sync(uint8_t *key, uint8_t len)
 
     for(uint8_t i = 0; i < len; i++)
     {
-        RFM69_WriteReg(0x2F + i, key[i]);
+        RFM69_WriteReg(RegSyncValue + i, key[i]);
     }
 }
 
@@ -203,8 +210,8 @@ void RFM69_SetKeyValues_Sync(uint8_t *key, uint8_t len)
  */
 void RFM69_AutoSetFdev(void)
 {
-    uint8_t msb_b = RFM69_ReadReg(0x03);
-    uint8_t lsb_b = RFM69_ReadReg(0x04);
+    uint8_t msb_b = RFM69_ReadReg(RegBitrateMsb);
+    uint8_t lsb_b = RFM69_ReadReg(RegBitrateLsb);
     uint16_t bitReg = (uint16_t)((msb_b << 8) | lsb_b);
 
     if (bitReg == 0) return;
@@ -219,8 +226,8 @@ void RFM69_AutoSetFdev(void)
     msb &= 0xC0;
     msb |= (uint8_t)(valReg >> 8);
 
-    RFM69_WriteReg(0x05, msb);
-    RFM69_WriteReg(0x06, (uint8_t)(valReg & 0xFF));
+    RFM69_WriteReg(RegFdevMsb, msb);
+    RFM69_WriteReg(RegFdevLsb, (uint8_t)(valReg & 0xFF));
 }
 
 /*
@@ -238,40 +245,45 @@ void RFM69_SetPacketConfig(void)
 }
 
 /*
+ * Flush FIFO
+ */
+void RFM69_FlushFIFO(void)
+{
+	RFM69_WriteReg(FIFO, 0x10);
+}
+
+/*
  * Send Message
  */
 void RFM69_SendMessage(uint8_t* payload, uint8_t len)
 {
-	printf("\r\n--- Sending Message ---\r\n");
-    RFM69_SetMode(RFM69_MODE_STDBY);
-    HAL_Delay(5);
-    RFM69_SetMode(RFM69_MODE_SLEEP);
-    RFM69_SetMode(RFM69_MODE_STDBY);
+	RFM69_printf("\r\n");
+	RFM69_printf("\r\n--- Sending Message ---\r\n");
 
-    RFM69_WriteReg(0x3C, 0x8F);//When send message
-	RFM69_WriteReg(0x28, 0x10); //Flush FIFO
+    RFM69_SetMode(RFM69_MODE_STDBY);
+    RFM69_FlushFIFO();
 
     if (len > 64) // Can be extended to 66 maximum
     {
-        printf("ERROR_SEND : Len of message exceed 64\r\n");
-        abord();
+    	RFM69_printf("ERROR_SEND : Len of message exceed 64\r\n");
+    	RFM69_printf("ABORD \r\n");
         RFM69_SetMode(RFM69_MODE_STDBY);
         return;
     }
 
-    RFM69_WriteReg(0x00, len);
+    RFM69_WriteReg(RegFIFO, len);
     for (uint8_t i = 0; i < len; i++) { // Can be optimized with DMA
-        RFM69_WriteReg(0x00, payload[i]);
+        RFM69_WriteReg(RegFIFO, payload[i]);
     }
 
     RFM69_SetMode(RFM69_MODE_FS);
 
     uint32_t tick = HAL_GetTick();
-    while (!(RFM69_ReadReg(0x27) & PLLock)) {
-        if ((HAL_GetTick() - tick) > 50)
+    while (!(RFM69_ReadReg(RegIrqFlagsPLL) & PLLock)) {
+        if ((HAL_GetTick() - tick) > 200)
 		{
-        	printf("ERROR_SEND : PLL never locked\r\n");
-        	abord();
+        	RFM69_printf("ERROR_SEND : PLL never locked\r\n");
+        	RFM69_printf("ABORD\r\n");
         	RFM69_SetMode(RFM69_MODE_STDBY);
         	return;
 		}
@@ -279,58 +291,289 @@ void RFM69_SendMessage(uint8_t* payload, uint8_t len)
 
     RFM69_SetMode(RFM69_MODE_TX);
 
-
     tick = HAL_GetTick();
-    while (!(RFM69_ReadReg(0x28) & PacketSend)) {
-        if ((HAL_GetTick() - tick) > TimeoutPacketNotSend) {
-            printf("ERROR_SEND: Nothing Send\r\n");
-            abord();
+    while (!(RFM69_ReadReg(RegIrqFlagsPLL) & 0x80)) {
+        if ((HAL_GetTick() - tick) > 20) {
+        	RFM69_printf("ERROR_SEND: Mode TX not Ready\r\n");
+        	RFM69_printf("ABORD\r\n");
             break;
         }
     }
 
-    if (RFM69_ReadReg(0x28) & PacketSend)
+    tick = HAL_GetTick();
+    while (!(RFM69_ReadReg(RegIrqFlagsFIFO) & PacketSend)) {
+        if ((HAL_GetTick() - tick) > TimeoutPacketNotSend) {
+        	RFM69_printf("ERROR_SEND: Packet Send Control down 0\r\n");
+        	RFM69_printf("ABORD\r\n");
+            break;
+        }
+    }
+
+    if (RFM69_ReadReg(RegIrqFlagsFIFO) & PacketSend)
     {
-        printf("Message Send\r\n");
+    	RFM69_printf("Message Send with no error\r\n");
     }
 
     RFM69_SetMode(RFM69_MODE_STDBY);
-    printf("\r\n---  ---\r\n");
+    RFM69_printf("\r\n---  ---\r\n");
 }
 
-/*
- * ABORD MESSAGE
- */
-void abord(void)
-{
-	printf("ABORD\r\n");
-}
+
 
 /*
- * Message Well Send
+ * Power Amplifier Selection
  */
-void RFM69_DEBUG_MessageSendOK(void)
+void RFM69_PowerAmplifierSelection(RFM69_PA_Select_t pa, int8_t dbm_step)
 {
-    uint8_t flags = RFM69_ReadReg(0x28);
+    uint8_t regVal = 0;
+    int8_t outputPower = 0;
 
-    if (flags & 0x08) {
-        printf("Message Send with Succes : bit PacketSent up to 1.\r\n");
+    switch (pa) {
+        case PA_0:
+            outputPower = dbm_step + 18;
+            regVal = 0x80; // Bit 7 (PA0)
+            break;
+
+        case PA_1:
+            outputPower = dbm_step + 18;
+            regVal = 0x40; // Bit 6 (PA1)
+            break;
+
+        case PA_1_2:
+            outputPower = dbm_step + 14;
+            regVal = 0x60; // Bits 6 & 5 (PA1 + PA2)
+            break;
+
+        case PA_HIGH_POWER:
+        	RFM69_printf("This function haven't been implemented yet.\r\n");
+        	RFM69_printf("Abord, Nothing change.\r\n");
+            break;
     }
-}
 
+    if (outputPower < 0)  outputPower = 0;
+    if (outputPower > 31) outputPower = 31;
+
+    regVal |= (uint8_t)outputPower;
+
+    RFM69_WriteReg(0x11, regVal);
+}
 
 /*
  * Read Message
  */
 uint8_t RFM69_ReceiveMessage(uint8_t* buffer, uint8_t maxLen)
 {
- // Next Step
-	return 0;
+	RFM69_printf("--- Waiting for Message ---\r\n");
+    RFM69_WriteReg(RegIrqFlagsFIFO, 0x10);
+
+    RFM69_SetMode(RFM69_MODE_RX);
+    uint8_t rssi = RFM69_ReadReg(RegRssiValue);
+    RFM69_printf("Bruit ambiant (RSSI): -%d dBm\r\n", rssi/2);
+
+    uint32_t tick = HAL_GetTick();
+    while (!(RFM69_ReadReg(RegIrqFlagsFIFO) & 0x04)) {
+        if ((HAL_GetTick() - tick) > 10000) {
+        	RFM69_printf("RX Timeout: No packet received\r\n");
+            RFM69_SetMode(RFM69_MODE_STDBY);
+            return 0;
+        }
+    }
+
+    uint8_t payloadLen = RFM69_ReadReg(RegFIFO);
+
+    uint8_t bytesToRead = (payloadLen > maxLen) ? maxLen : payloadLen;
+
+    for (uint8_t i = 0; i < bytesToRead; i++) {
+        buffer[i] = RFM69_ReadReg(RegFIFO);
+    }
+
+    RFM69_printf("Message Received [%d bytes]: ", bytesToRead);
+    for (uint8_t i = 0; i < bytesToRead; i++) {
+    	RFM69_printf("%c", buffer[i]);
+    }
+    RFM69_printf("\r\n");
+
+    RFM69_SetMode(RFM69_MODE_STDBY);
+
+    RFM69_WriteReg(RegIrqFlagsFIFO, 0x10);
+
+    return bytesToRead;
 }
 
 
+/*
+ * Read RSSI in dBm
+ */
+uint8_t RFM69_RSSI(void)
+{
+	uint8_t rssi = RFM69_ReadReg(RegRssiValue);
+	RFM69_printf("Bruit ambiant (RSSI): -%d dBm\r\n", rssi/2);
+	return rssi;
+}
+
+/*
+ * Set LNA Impedance
+ */
+void RFM69_SetLnaImpedance(RFM69_LnaZin_t zin)
+{
+    uint8_t oldVal = RFM69_ReadReg(RegLna);
+    uint8_t newVal = (oldVal & 0x7F) | (uint8_t)zin;
+    RFM69_WriteReg(0x18, newVal);
+}
+
+/*
+ * LNA Gain
+ */
+void RFM69_SetLnaGain(RFM69_LnaGain_t gain)
+{
+    uint8_t oldVal = RFM69_ReadReg(RegLna);
+    uint8_t newVal = (oldVal & 0xF8) | (uint8_t)gain;
+    RFM69_WriteReg(RegLna, newVal);
+}
+
+/*
+ * Get LNA Status
+ */
+void RFM69_GetLnaStatus(void)
+{
+    uint8_t val = RFM69_ReadReg(RegLna);
+
+    uint8_t zin  = (val & 0x80);      // Bit 7
+    uint8_t real = (val & 0x38) >> 3; // Bits 5-3 (Gain effectif)
+    uint8_t set  = (val & 0x07);      // Bits 2-0 (Gain commandé)
+
+    RFM69_printf("\r\n");
+    RFM69_printf("--- LNA Status ---\r\n");
+    RFM69_printf("Impedance : %s\r\n", (zin == 0x80) ? "200 Ohms" : "50 Ohms");
+
+    if (set == 0) printf("Mode : AUTOMATIQUE (AGC)\r\n");
+    else          printf("Mode : MANUEL (G%d force)\r\n", set);
+
+    RFM69_printf("Gain Reel Actuel : G%d\r\n", real);
+    RFM69_printf("------------------\r\n");
+    RFM69_printf("\r\n");
+}
+
+/*
+ * GET AFC Correction Hz
+ */
+int32_t RFM69_GetAFCCorrectionHz(void)
+{
+    int16_t val = (int16_t)(RFM69_ReadReg(RegAfcMsb) << 8); // MSB
+    val |= RFM69_ReadReg(RegAfcLsb);                         // LSB
+    return (int32_t)val * FStep;
+}
+
+/*
+ * GET Frequency Error FEI Hz
+ */
+int32_t RFM69_GetFrequencyErrorFeiHz(void)
+{
+    uint8_t regAfcFei = RFM69_ReadReg(RegAfcFei);
+
+    if (!(regAfcFei & 0x04))
+    {
+        RFM69_WriteReg(RegAfcFei, regAfcFei | 0x20);
+
+        uint32_t tick = HAL_GetTick();
+        while (!(RFM69_ReadReg(RegAfcFei) & 0x40)) {
+            if ((HAL_GetTick() - tick) > 10) break;
+        }
+    }
+
+    int16_t val = (int16_t)(RFM69_ReadReg(RegFeiMsb) << 8);
+    val |= RFM69_ReadReg(RegFeiLsb);
+
+    return (int32_t)val * 61;
+}
+
+/*
+ * Get Status of Reading Error Frequency FEI
+ */
+uint8_t RFM69_Status_ReadingErrorFrequency(void) {
+    return (RFM69_ReadReg(RegAfcFei) & 0x40) >> 6;
+}
+
+/*
+ * Get Status of Frequency recalibration AFC
+ */
+uint8_t RFM69_Status_RecalibrationFrequencyAFC(void) {
+    return (RFM69_ReadReg(RegAfcFei) & 0x40) >> 4;
+}
+
+/*
+ * Start Error Frequency Measure FEI
+ */
+void RFM69_StartFEI(void) {
+    uint8_t val = RFM69_ReadReg(RegAfcFei);
+    RFM69_WriteReg(RegAfcFei, val | 0x20);
+}
+
+/*
+ * Start Frequency Recalibration AFC
+ */
+void RFM69_StartAFC(void) {
+    uint8_t val = RFM69_ReadReg(RegAfcFei);
+    RFM69_WriteReg(RegAfcFei, val | 0x01);
+}
+
+/*
+ * Clear Frequency Recalibration AFC
+ */
+void RFM69_ClearAfc(void) {
+    uint8_t val = RFM69_ReadReg(RegAfcFei);
+    RFM69_WriteReg(RegAfcFei, val | 0x02);
+}
+
+/*
+ * Activate/Deactive Automatic Frequency Recalibration AFC
+ */
+void RFM69_SetAfcAuto(RFM69_AfcAuto_t state) {
+    uint8_t val = RFM69_ReadReg(RegAfcFei);
+    if (state == AFC_AUTO_ON) {
+        val |= 0x04;  // Put bit 2 at 1
+    } else {
+        val &= 0xFB;  // Put bit 2 at 0
+    }
+    RFM69_WriteReg(RegAfcFei, val);
+}
+
+/*
+ * Activate/Deactive Clearing Automatic Frequency Recalibration AFC
+ */
+void RFM69_SetAfcAutoclear(RFM69_AfcAutoclear_t state) {
+    uint8_t val = RFM69_ReadReg(RegAfcFei);
+    if (state == AFC_AUTOCLEAR_ON) {
+        val |= 0x08;
+    } else {
+        val &= 0xF7;
+    }
 
 
+    RFM69_WriteReg(RegAfcFei, val);
+}
+
+
+/*
+ * Get Internal Temperature
+ */
+uint8_t RFM69_GetTemperature(void)
+{
+	if (RFM69_GetMode()!= RFM69_MODE_STDBY)
+	{
+		RFM69_printf(" Incorrect mode, must be in Standby Mode");
+		RFM69_printf(" Abord");
+		return 0;
+	}
+
+    RFM69_WriteReg(RegTemp1, 0x08);
+
+    while (RFM69_ReadReg(RegTemp1) & 0x04);
+
+    uint8_t rawTemp = RFM69_ReadReg(0x4F);
+
+    return rawTemp;
+}
 
 
 /*
