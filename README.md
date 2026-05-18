@@ -1,40 +1,16 @@
 # STM32 RFM69HCW / SX1231 Driver (HAL-Based)
 
-C driver for the **RFM69HCW / SX1231** RF transceiver, designed for **STM32** microcontrollers using the **STM32 HAL** library.
+This is a C driver for the **RFM69HCW / SX1231** RF transceiver, designed for **STM32** microcontrollers using the **STM32 HAL** library.
 
-This library provides a simple and efficient library for configuring and controlling the radio module over SPI.
+This library provides a way of controlling the radio module over SPI.
 
+
+<img src="https://cdn-shop.adafruit.com/970x728/3070-07.jpg" alt="Texte alternatif" width="300">
 
 ## 🚀 QUICK START 
 
-```c
-#include <RFM69HCW.h>
+Take a look at the example :  `example.c`
 
-int main(void)
-{
-    RFM69_Init(&hspi1, GPIOC, GPIO_PIN_7);
-    RFM69_SetMode(RFM69_MODE_STDBY);
-    RFM69_SetFrequencyTo433();
-    RFM69_SetDataProcessingMode(RFM69_PACKET_MODE);
-    RFM69_SetModulationType(RFM69_MODUL_FSK);
-    RFM69_SetDataShaping(RFM69_SHAPING_Gaussianfilter_BT1);
-    RFM69_getConfigData();
-    RFM69_SetBitrate(4800);
-    RFM69_AutoMessageDetectionReceive_Config(RFM69_SYNC_ON, RFM69_FIFO_FILL_IF_SYNC, 2, RFM69_SYNC_TOLERANCE_ERROR_2);
-    uint8_t mykey[] = {0x42, 0x24};
-    RFM69_SetKeyValues_Sync(mykey, 2);
-    RFM69_AutoSetFdev();
-    RFM69_SetPacketConfig();
-  while (1)
-  {
-    uint8_t message[] = "SATELLITE_TEST";
-    RFM69_SendMessage( message, 14);
-
-  }
-}
-
-
-```
 ## 💻 SPI recommanded configuration
 
 The SPI was configured as follows:
@@ -213,6 +189,36 @@ The SPI was configured as follows:
 </details>
 
 
+
+## ⚠️ Important notes
+- Key Sync have to be the same on each module
+- Bitrates have to be the same on each module
+  
+## Liens utiles / Resources
+* [Official Website](https://www.adafruit.com/product/3071)
+* [Datasheet RFM69HCW](https://cdn.sparkfun.com/datasheets/Wireless/General/RFM69HCW-V1.1.pdf)
+* [Guide d'apprentissage Adafruit](https://learn.adafruit.com/adafruit-rfm69hcw-and-rfm96-rfm95-rfm98-lora-packet-padio-breakouts/downloads)
+
+---
+
+## 🧪 Connection Troubleshooting
+
+If the module does not respond correctly, check the SPI communication.
+
+### ✔️ Step 1 — Verify chip detection
+
+Read the register:
+
+- `RegVersion` = `0x10`
+
+Expected value:
+- `0x24`
+
+👉 If the value is different, it means:
+- SPI wiring issue, or
+- incorrect configuration
+---
+
 ## 🔧 Debug Configuration
 
 To enable or disable all `printf` debug outputs, edit `RFM69HCW.h`.
@@ -232,46 +238,3 @@ Simply comment or uncomment the following line:
     #define RFM69_printf(...)
 #endif
 ```
-
----
-
-## 🧪 Connection Troubleshooting
-
-If the module does not respond correctly, check the SPI communication.
-
-### ✔️ Step 1 — Verify chip detection
-
-Read the register:
-
-- `RegVersion` = `0x10`
-
-Expected value:
-- `0x24`
-
-👉 If the value is different, it means:
-- SPI wiring issue, or
-- incorrect configuration, or
-- module not powered correctly.
-
-
-
-
-
----
-
-
-
-## ⚠️ Important notes
-- Key Sync have to be the same on each module
-- Bitrates have to be the same on each module
-  
-## 📂 Structure of the project
-- `RFM69HCW.h` : Definitions of register addresses and function prototypes.
-- `RFM69HCW.c` : Implémentation function in C.
-
-## Useful Documents
-**[Datasheet RFM69HCW](https://cdn.sparkfun.com/datasheets/Wireless/General/RFM69HCW-V1.1.pdf)**
-
-## 📝 Licence
-EN : This project was developed for educational purposes. Feel free to use and improve it!
-FR : Ce projet est développé à des fins pédagogiques. Libre à vous de l'utiliser et de l'améliorer !
