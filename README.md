@@ -114,7 +114,7 @@ The SPI was configured as follows:
 - `RFM69_SetLnaImpedance` → Set LNA Impedance (Z) In
 - `RFM69_SetLnaGain` → Set LNA Gain
 - `RFM69_GetLnaStatus` → Get LNA Configuration
-- `RFM69_ReceiveMessage` → Read a message received
+- `RFM69_ReceiveMessage_Packet_Mode` → Read a message received
 
 <details>
 <summary> Full reference </summary>
@@ -125,7 +125,7 @@ The SPI was configured as follows:
 | `RFM69_SetLnaImpedance` | Set LNA Impedance (Z) In  | `LNA_Impedance_50`<br> `LNA_Impedance_200`<br> |
 | `RFM69_SetLnaGain` | Set LNA Gain  | `LNA_GAIN_AUTO`<br> `LNA_GAIN_G1`<br>`LNA_GAIN_G2`<br>`LNA_GAIN_G3`<br>`LNA_GAIN_G4`<br>`LNA_GAIN_G4`<br>`LNA_GAIN_G5`<br>`LNA_GAIN_G6`<br> |
 | `RFM69_GetLnaStatus` | Get LNA Configuration  | |
-| `RFM69_ReceiveMessage` | Read a message received  | uint8_t receivedLen = RFM69_ReceiveMessage(rxBuffer, 64); |
+| `RFM69_ReceiveMessage_Packet_Mode` | Read a message received  | uint8_t receivedLen = RFM69_ReceiveMessage_Packet_Mode(rxBuffer, 64); |
 </details>
 
 ### 🔄 Automatic Frequency Correction AFC
