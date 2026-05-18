@@ -75,7 +75,7 @@ void RFM69_SetFrequencyTo433(void)
 }
 
 /*
- * Mode Choice
+ * Select Mode Choice
  */
 void RFM69_SetMode(RFM69_Mode_t mode)
 {
@@ -125,7 +125,7 @@ void RFM69_SetDataShaping(RFM69_Data_Shaping_t shaping)
     uint8_t modulation = (currentVal & 0x18);
 
     if (modulation == RFM69_MODUL_OOK && shaping == RFM69_SHAPING_Gaussianfilter_BT03) {
-    	RFM69_printf("Warning: Shaping BT0.3 incompatible with OOK. Forcing NONE.\r\n");
+    	RFM69_printf("\r\n !Warning: Shaping BT0.3 incompatible with OOK. Forcing NONE.\r\n");
         shaping = RFM69_SHAPING_NONE;
     }
 
@@ -170,7 +170,7 @@ void RFM69_SetBitrate(uint32_t bitrate)
             break;
         default:
         	msb = 0x1A; lsb = 0x0B;
-        	RFM69_printf("Warning: Bitrate non standard. Utilisation de 4.8kbps par defaut.\r\n");
+        	RFM69_printf("\r\n !Warning: Bitrate not standard. Default 4.8kbps.\r\n");
             break;
     }
 
@@ -222,7 +222,7 @@ void RFM69_AutoSetFdev(void)
 
     if (valReg > 0x3FFF) valReg = 0x3FFF;
 
-    uint8_t msb = RFM69_ReadReg(0x05);
+    uint8_t msb = RFM69_ReadReg(RegFdevMsb);
     msb &= 0xC0;
     msb |= (uint8_t)(valReg >> 8);
 
@@ -233,15 +233,14 @@ void RFM69_AutoSetFdev(void)
 /*
  * SetAutomatiquePacketConfig
  */
-
-//WARNING A FINIR
-//WARNING A FINIR
-//WARNING A FINIR
-//WARNING A FINIR
-
-void RFM69_SetPacketConfig(void)
+void RFM69_SetPacketConfig(RFM69_PacketFormat_t format,
+                           RFM69_DcFree_t dcFree,
+                           RFM69_CrcOn_t crcOn,
+                           RFM69_CrcAutoClear_t crcAutoClear,
+                           RFM69_AddressFiltering_t filtering)
 {
-    RFM69_WriteReg(0x37, 0x90);
+    uint8_t regValue = (uint8_t)(format | dcFree | crcOn | crcAutoClear | filtering);
+    RFM69_WriteReg(REG_PACKETCONFIG1, regValue);
 }
 
 /*
@@ -251,74 +250,6 @@ void RFM69_FlushFIFO(void)
 {
 	RFM69_WriteReg(FIFO, 0x10);
 }
-
-/*
- * Send Message
- */
-void RFM69_SendMessage(uint8_t* payload, uint8_t len)
-{
-	RFM69_printf("\r\n");
-	RFM69_printf("\r\n--- Sending Message ---\r\n");
-
-    RFM69_SetMode(RFM69_MODE_STDBY);
-    RFM69_FlushFIFO();
-
-    if (len > 64) // Can be extended to 66 maximum
-    {
-    	RFM69_printf("ERROR_SEND : Len of message exceed 64\r\n");
-    	RFM69_printf("ABORD \r\n");
-        RFM69_SetMode(RFM69_MODE_STDBY);
-        return;
-    }
-
-    RFM69_WriteReg(RegFIFO, len);
-    for (uint8_t i = 0; i < len; i++) { // Can be optimized with DMA
-        RFM69_WriteReg(RegFIFO, payload[i]);
-    }
-
-    RFM69_SetMode(RFM69_MODE_FS);
-
-    uint32_t tick = HAL_GetTick();
-    while (!(RFM69_ReadReg(RegIrqFlagsPLL) & PLLock)) {
-        if ((HAL_GetTick() - tick) > 200)
-		{
-        	RFM69_printf("ERROR_SEND : PLL never locked\r\n");
-        	RFM69_printf("ABORD\r\n");
-        	RFM69_SetMode(RFM69_MODE_STDBY);
-        	return;
-		}
-    }
-
-    RFM69_SetMode(RFM69_MODE_TX);
-
-    tick = HAL_GetTick();
-    while (!(RFM69_ReadReg(RegIrqFlagsPLL) & 0x80)) {
-        if ((HAL_GetTick() - tick) > 20) {
-        	RFM69_printf("ERROR_SEND: Mode TX not Ready\r\n");
-        	RFM69_printf("ABORD\r\n");
-            break;
-        }
-    }
-
-    tick = HAL_GetTick();
-    while (!(RFM69_ReadReg(RegIrqFlagsFIFO) & PacketSend)) {
-        if ((HAL_GetTick() - tick) > TimeoutPacketNotSend) {
-        	RFM69_printf("ERROR_SEND: Packet Send Control down 0\r\n");
-        	RFM69_printf("ABORD\r\n");
-            break;
-        }
-    }
-
-    if (RFM69_ReadReg(RegIrqFlagsFIFO) & PacketSend)
-    {
-    	RFM69_printf("Message Send with no error\r\n");
-    }
-
-    RFM69_SetMode(RFM69_MODE_STDBY);
-    RFM69_printf("\r\n---  ---\r\n");
-}
-
-
 
 /*
  * Power Amplifier Selection
@@ -345,8 +276,8 @@ void RFM69_PowerAmplifierSelection(RFM69_PA_Select_t pa, int8_t dbm_step)
             break;
 
         case PA_HIGH_POWER:
-        	RFM69_printf("This function haven't been implemented yet.\r\n");
-        	RFM69_printf("Abord, Nothing change.\r\n");
+        	RFM69_printf("\r\n !This function haven't been implemented yet.\r\n");
+        	RFM69_printf("\r\n !Abord, Nothing changed.\r\n");
             break;
     }
 
@@ -355,46 +286,110 @@ void RFM69_PowerAmplifierSelection(RFM69_PA_Select_t pa, int8_t dbm_step)
 
     regVal |= (uint8_t)outputPower;
 
-    RFM69_WriteReg(0x11, regVal);
+    RFM69_WriteReg(RegPaLevel, regVal);
 }
 
 /*
- * Read Message
+ * Send Message
  */
-uint8_t RFM69_ReceiveMessage(uint8_t* buffer, uint8_t maxLen)
+void RFM69_SendMessage_Packet_Mode(uint8_t* payload, uint8_t len)
 {
-	RFM69_printf("--- Waiting for Message ---\r\n");
+	RFM69_printf("\r\n--- Packet Mode Sending Message ---\r\n");
+
+    RFM69_SetMode(RFM69_MODE_STDBY);
+    RFM69_FlushFIFO();
+
+    if (len > 64) // Can be extended to 66 maximum
+    {
+    	RFM69_printf("\r\n !ERROR_SEND : Len of message exceed 64\r\n");
+    	RFM69_printf("\r\n !ABORD \r\n");
+        RFM69_SetMode(RFM69_MODE_STDBY);
+        return;
+    }
+
+    RFM69_WriteReg(RegFIFO, len);
+    for (uint8_t i = 0; i < len; i++) { // Can be optimized with DMA
+        RFM69_WriteReg(RegFIFO, payload[i]);
+    }
+
+    RFM69_SetMode(RFM69_MODE_FS);
+
+    uint32_t tick = HAL_GetTick();
+    while (!(RFM69_ReadReg(RegIrqFlagsPLL) & PLLock)) {
+        if ((HAL_GetTick() - tick) > 200)
+		{
+        	RFM69_printf("\r\n !ERROR_SEND : PLL never locked\r\n");
+        	RFM69_printf("\r\n !ABORD\r\n");
+        	RFM69_SetMode(RFM69_MODE_STDBY);
+        	return;
+		}
+    }
+
+    RFM69_SetMode(RFM69_MODE_TX);
+
+    tick = HAL_GetTick();
+    while (!(RFM69_ReadReg(RegIrqFlagsPLL) & 0x80)) {
+        if ((HAL_GetTick() - tick) > 20) {
+        	RFM69_printf("\r\n !ERROR_SEND: Mode TX not Ready\r\n");
+        	RFM69_printf("\r\n !ABORD\r\n");
+        	RFM69_SetMode(RFM69_MODE_STDBY);
+            break;
+        }
+    }
+
+    tick = HAL_GetTick();
+    while (!(RFM69_ReadReg(RegIrqFlagsFIFO) & PacketSend)) {
+        if ((HAL_GetTick() - tick) > TimeoutPacketNotSend) {
+        	RFM69_printf("\r\n !ERROR_SEND: Packet Send Control down 0.\r\n");
+        	RFM69_printf("\r\n !ABORD\r\n");
+        	RFM69_SetMode(RFM69_MODE_STDBY);
+            break;
+        }
+    }
+
+    RFM69_printf("\r\n !Message Send With Success\r\n");
+
+    RFM69_SetMode(RFM69_MODE_STDBY);
+
+    RFM69_printf("\r\n---  ---\r\n");
+}
+
+/*
+ * Read Message/Packet
+ */
+uint8_t RFM69_ReceiveMessage_Packet_Mode(uint8_t* buffer, uint8_t maxLen)
+{
+	RFM69_printf("\r\n --- Packet Mode Reception Message ---\r\n");
     RFM69_WriteReg(RegIrqFlagsFIFO, 0x10);
 
     RFM69_SetMode(RFM69_MODE_RX);
+
     uint8_t rssi = RFM69_ReadReg(RegRssiValue);
-    RFM69_printf("Bruit ambiant (RSSI): -%d dBm\r\n", rssi/2);
+    RFM69_printf("\r\n Ambient Noise (RSSI): -%d dBm\r\n", rssi/2);
 
     uint32_t tick = HAL_GetTick();
     while (!(RFM69_ReadReg(RegIrqFlagsFIFO) & 0x04)) {
-        if ((HAL_GetTick() - tick) > 10000) {
-        	RFM69_printf("RX Timeout: No packet received\r\n");
+        if ((HAL_GetTick() - tick) > TimeoutNoPacketReceived)
+        {
+        	RFM69_printf("\r\n RX Timeout: No packet received\r\n");
             RFM69_SetMode(RFM69_MODE_STDBY);
             return 0;
         }
     }
 
     uint8_t payloadLen = RFM69_ReadReg(RegFIFO);
-
     uint8_t bytesToRead = (payloadLen > maxLen) ? maxLen : payloadLen;
 
     for (uint8_t i = 0; i < bytesToRead; i++) {
         buffer[i] = RFM69_ReadReg(RegFIFO);
     }
 
-    RFM69_printf("Message Received [%d bytes]: ", bytesToRead);
+    RFM69_printf("\r\n Packet Received [%d bytes]: \r\n ", bytesToRead);
     for (uint8_t i = 0; i < bytesToRead; i++) {
-    	RFM69_printf("%c", buffer[i]);
+    	RFM69_printf("%c \r\n", buffer[i]);
     }
-    RFM69_printf("\r\n");
 
     RFM69_SetMode(RFM69_MODE_STDBY);
-
     RFM69_WriteReg(RegIrqFlagsFIFO, 0x10);
 
     return bytesToRead;
@@ -407,7 +402,7 @@ uint8_t RFM69_ReceiveMessage(uint8_t* buffer, uint8_t maxLen)
 uint8_t RFM69_RSSI(void)
 {
 	uint8_t rssi = RFM69_ReadReg(RegRssiValue);
-	RFM69_printf("Bruit ambiant (RSSI): -%d dBm\r\n", rssi/2);
+	RFM69_printf("\r\n Ambient Noise (RSSI): -%d dBm\r\n", rssi/2);
 	return rssi;
 }
 
@@ -418,7 +413,7 @@ void RFM69_SetLnaImpedance(RFM69_LnaZin_t zin)
 {
     uint8_t oldVal = RFM69_ReadReg(RegLna);
     uint8_t newVal = (oldVal & 0x7F) | (uint8_t)zin;
-    RFM69_WriteReg(0x18, newVal);
+    RFM69_WriteReg(RegLna, newVal);
 }
 
 /*
@@ -439,19 +434,17 @@ void RFM69_GetLnaStatus(void)
     uint8_t val = RFM69_ReadReg(RegLna);
 
     uint8_t zin  = (val & 0x80);      // Bit 7
-    uint8_t real = (val & 0x38) >> 3; // Bits 5-3 (Gain effectif)
-    uint8_t set  = (val & 0x07);      // Bits 2-0 (Gain commandé)
+    uint8_t real = (val & 0x38) >> 3; // Bits 5-3 (Effective gain)
+    uint8_t set  = (val & 0x07);      // Bits 2-0 (Controlled gain)
 
-    RFM69_printf("\r\n");
-    RFM69_printf("--- LNA Status ---\r\n");
-    RFM69_printf("Impedance : %s\r\n", (zin == 0x80) ? "200 Ohms" : "50 Ohms");
+    RFM69_printf("\r\n --- LNA Status ---\r\n");
+    RFM69_printf("\r\n Impedance : %s\r\n", (zin == 0x80) ? "200 Ohms" : "50 Ohms");
 
-    if (set == 0) printf("Mode : AUTOMATIQUE (AGC)\r\n");
-    else          printf("Mode : MANUEL (G%d force)\r\n", set);
+    if (set == 0) printf("\r\n Mode : AUTOMATIC (AGC)\r\n");
+    else          printf("\r\n Mode : MANUAL (G%d force)\r\n", set);
 
-    RFM69_printf("Gain Reel Actuel : G%d\r\n", real);
-    RFM69_printf("------------------\r\n");
-    RFM69_printf("\r\n");
+    RFM69_printf("\r\n Current Gain : G%d\r\n", real);
+    RFM69_printf("\r\n ------------------\r\n");
 }
 
 /*
@@ -490,21 +483,24 @@ int32_t RFM69_GetFrequencyErrorFeiHz(void)
 /*
  * Get Status of Reading Error Frequency FEI
  */
-uint8_t RFM69_Status_ReadingErrorFrequency(void) {
+uint8_t RFM69_Status_ReadingErrorFrequency(void)
+{
     return (RFM69_ReadReg(RegAfcFei) & 0x40) >> 6;
 }
 
 /*
  * Get Status of Frequency recalibration AFC
  */
-uint8_t RFM69_Status_RecalibrationFrequencyAFC(void) {
+uint8_t RFM69_Status_RecalibrationFrequencyAFC(void)
+{
     return (RFM69_ReadReg(RegAfcFei) & 0x40) >> 4;
 }
 
 /*
  * Start Error Frequency Measure FEI
  */
-void RFM69_StartFEI(void) {
+void RFM69_StartFEI(void)
+{
     uint8_t val = RFM69_ReadReg(RegAfcFei);
     RFM69_WriteReg(RegAfcFei, val | 0x20);
 }
@@ -512,7 +508,8 @@ void RFM69_StartFEI(void) {
 /*
  * Start Frequency Recalibration AFC
  */
-void RFM69_StartAFC(void) {
+void RFM69_StartAFC(void)
+{
     uint8_t val = RFM69_ReadReg(RegAfcFei);
     RFM69_WriteReg(RegAfcFei, val | 0x01);
 }
@@ -520,16 +517,18 @@ void RFM69_StartAFC(void) {
 /*
  * Clear Frequency Recalibration AFC
  */
-void RFM69_ClearAfc(void) {
+void RFM69_ClearAfc(void)
+{
     uint8_t val = RFM69_ReadReg(RegAfcFei);
     RFM69_WriteReg(RegAfcFei, val | 0x02);
 }
 
 /*
- * Activate/Deactive Automatic Frequency Recalibration AFC
+ * Activate/Deactivate Automatic Frequency Recalibration AFC
  */
-void RFM69_SetAfcAuto(RFM69_AfcAuto_t state) {
-    uint8_t val = RFM69_ReadReg(RegAfcFei);
+void RFM69_SetAfcAuto(RFM69_AfcAuto_t state)
+{
+	uint8_t val = RFM69_ReadReg(RegAfcFei);
     if (state == AFC_AUTO_ON) {
         val |= 0x04;  // Put bit 2 at 1
     } else {
@@ -539,17 +538,16 @@ void RFM69_SetAfcAuto(RFM69_AfcAuto_t state) {
 }
 
 /*
- * Activate/Deactive Clearing Automatic Frequency Recalibration AFC
+ * Activate/Deactivate Clearing Automatic Frequency Recalibration AFC
  */
-void RFM69_SetAfcAutoclear(RFM69_AfcAutoclear_t state) {
+void RFM69_SetAfcAutoclear(RFM69_AfcAutoclear_t state)
+{
     uint8_t val = RFM69_ReadReg(RegAfcFei);
     if (state == AFC_AUTOCLEAR_ON) {
         val |= 0x08;
     } else {
         val &= 0xF7;
     }
-
-
     RFM69_WriteReg(RegAfcFei, val);
 }
 
@@ -561,8 +559,8 @@ uint8_t RFM69_GetTemperature(void)
 {
 	if (RFM69_GetMode()!= RFM69_MODE_STDBY)
 	{
-		RFM69_printf(" Incorrect mode, must be in Standby Mode");
-		RFM69_printf(" Abord");
+		RFM69_printf("\r\n !Incorrect mode, must be in Standby Mode");
+		RFM69_printf("\r\n !Abord");
 		return 0;
 	}
 
@@ -587,45 +585,45 @@ void RFM69_getConfigData()
 	uint8_t modulation = (val & 0x18);
 	uint8_t shaping = (val & 0x03);
 
-	printf("--- Configuration RFM69HCW ---\r\n");
+	RFM69_printf("\r\n --- Config Data RFM69HCW ---\r\n");
 
 	if(mode == RFM69_PACKET_MODE)
 	{
-		printf("Mode : PACKET\r\n");
+		RFM69_printf("Mode : PACKET\r\n");
 	}else if(mode == RFM69_CONTINUOUS_SYNC){
-		printf("Mode : CONTINUOUS\r\n");
+		RFM69_printf("Mode : CONTINUOUS\r\n");
 	}else if(mode == RFM69_CONTINUOUS_RAW){
-		printf("Mode : RAW\r\n");
+		RFM69_printf("Mode : RAW\r\n");
 	}
 
 	if(modulation == RFM69_MODUL_FSK)
 	{
-		printf("Modulation : FSK\r\n");
+		RFM69_printf("Modulation : FSK\r\n");
 	}else if(modulation == RFM69_MODUL_OOK){
-		printf("Modulation : OOK\r\n");
+		RFM69_printf("Modulation : OOK\r\n");
 	}
 
 	if(shaping == RFM69_SHAPING_NONE)
 	{
-		printf("Shaping : None\r\n");
+		RFM69_printf("Shaping : None\r\n");
 	}else if(shaping == RFM69_SHAPING_Gaussianfilter_BT1){
-		printf("Shaping : Gaussian Filtre BT=1.0\r\n");
+		RFM69_printf("Shaping : Gaussian Filtre BT=1.0\r\n");
 	}else if(shaping == RFM69_SHAPING_Gaussianfilter_BT05){
-		printf("Shaping : Gaussian Filtre BT=0.5\r\n");
+		RFM69_printf("Shaping : Gaussian Filtre BT=0.5\r\n");
 	}else if(shaping == RFM69_SHAPING_Gaussianfilter_BT03){
-		printf("Shaping : Gaussian Filtre BT=0.3\r\n");
+		RFM69_printf("Shaping : Gaussian Filtre BT=0.3\r\n");
 	}
 
     val = RFM69_ReadReg(0x01);
     uint8_t opMode = (val & 0x1C);
     if(opMode == RFM69_MODE_SLEEP) {
-        printf("Operation Mode : SLEEP\r\n");
+    	RFM69_printf("Operation Mode : SLEEP\r\n");
     } else if(opMode == RFM69_MODE_STDBY) {
-        printf("Operation Mode : STANDBY\r\n");
+    	RFM69_printf("Operation Mode : STANDBY\r\n");
     } else if(opMode == RFM69_MODE_TX) {
-        printf("Operation Mode : TRANSMITTING\r\n");
+    	RFM69_printf("Operation Mode : TRANSMITTING\r\n");
     } else if(opMode == RFM69_MODE_RX) {
-        printf("Operation Mode : RECEIVEING\r\n");
+    	RFM69_printf("Operation Mode : RECEIVEING\r\n");
     }
 
     uint8_t msb = RFM69_ReadReg(0x07);
@@ -635,16 +633,93 @@ void RFM69_getConfigData()
     uint64_t freqHz = ((uint64_t)frf * 6103515625ULL) / 100000000ULL;
     uint32_t mhz = (uint32_t)(freqHz / 1000000);
     uint32_t khz = (uint32_t)((freqHz % 1000000) / 1000);
-    printf("Fréquence : %lu.%03lu MHz\r\n", (unsigned long)mhz, (unsigned long)khz);
-
+    RFM69_printf("Frequency : %lu.%03lu MHz\r\n", (unsigned long)mhz, (unsigned long)khz);
 
     uint8_t msb_b = RFM69_ReadReg(0x03);
     uint8_t lsb_b = RFM69_ReadReg(0x04);
     uint16_t bitReg = (uint16_t)((msb_b << 8) | lsb_b);
     uint32_t currentBitrate = (bitReg == 0) ? 0 : (32000000 / bitReg);
-    printf("Bitrate        : %lu bps\r\n", (unsigned long)currentBitrate);
+    RFM69_printf("Bitrate    : %lu bps\r\n", (unsigned long)currentBitrate);
 
-    printf("------------------------------\r\n");
+    RFM69_printf("------------------------------\r\n");
 
 }
 
+/*
+ * Display trame for Debug !
+ */
+void display_trame(const TrameAX *trame) {
+
+    const uint8_t *ptr = (const uint8_t *)trame;
+    size_t taille = sizeof(TrameAX);
+
+    RFM69_printf("\r\n --- Display TRAME (%d octets) ---\r\n", (int)taille);
+    RFM69_printf("\r\nFlag/Address/Control:\r\n");
+
+    size_t i = 0;
+    while (i < taille) {
+
+        if (i == 16) {
+        	RFM69_printf("\r\n- RAW DATA -\r\n");
+        }
+
+        size_t debut_bloc = i;
+        size_t taille_bloc = 0;
+
+        for (size_t j = 0; j < 16; j++) {
+            if ((i + j) >= taille) break;
+            if ((i + j) == 16 && j > 0) break;
+            if ((i + j) == 272 && j > 0) break;
+            taille_bloc++;
+        }
+
+        for (size_t j = 0; j < taille_bloc; j++) {
+        	RFM69_printf("%02X ", ptr[debut_bloc + j]);
+        }
+
+        for (size_t j = taille_bloc; j < 16; j++) {
+        	RFM69_printf("   ");
+        }
+
+        if (debut_bloc >= 16 && debut_bloc < 272) {
+        	RFM69_printf(" |  ");
+            for (size_t j = 0; j < taille_bloc; j++) {
+                uint8_t c = ptr[debut_bloc + j];
+                if (isprint(c)) {
+                	RFM69_printf("%c", c);
+                } else {
+                	RFM69_printf(".");
+                }
+            }
+        }
+
+        RFM69_printf("\r\n");
+        i += taille_bloc;
+
+        if (i == 272) {
+        	RFM69_printf("\r\n- END of RAW DATA -\r\n");
+        }
+    }
+
+    RFM69_printf("\r\n ------------------------\r\n");
+}
+
+/*
+ * Fill Up Data Buffer
+ */
+int Fill_Up_Data(TrameAX *trame, const char *message) {
+
+    size_t Size_Of_Data = strlen(message);
+
+    if (Size_Of_Data > 256) {
+    	RFM69_printf("\r\n ERROR : This message is way too long. (%d). Maximum = 256.\r\n", (int)Size_Of_Data);
+        return -1;
+    }
+
+    memset(trame->data, 0, 256);
+    memcpy(trame->data, message, Size_Of_Data);
+
+    RFM69_printf("\r\n !Packet Loaded With Success.\r\n");
+
+    return 0;
+}
