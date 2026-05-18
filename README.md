@@ -77,6 +77,7 @@ The SPI was configured as follows:
 - `RFM69_SetModulationType` → Select modulation type
 - `RFM69_SetDataProcessingMode` → Select Data Processing type
 - `RFM69_SetDataShaping` → Select Data Shaping type
+- `RFM69_SetPacketConfig` → Select Packet Configuration
 
 <details>
 <summary> Full reference </summary>
@@ -86,6 +87,7 @@ The SPI was configured as follows:
 | `RFM69_SetModulationType` | Select Modulation type  |`RFM69_MODUL_FSK`<br> `RFM69_MODUL_OOK`  |
 | `RFM69_SetDataProcessingMode` | Select Data Processing type  |`RFM69_PACKET_MODE`<br> `RFM69_CONTINUOUS_SYNC`  <br> `RFM69_CONTINUOUS_RAW` |
 | `RFM69_SetDataShaping` | Select Data Shaping type  |`RFM69_SHAPING_NONE`<br> `RFM69_SHAPING_Gaussianfilter_BT1`<br> `RFM69_SHAPING_Gaussianfilter_BT05`<br> `RFM69_SHAPING_Gaussianfilter_BT03`  |
+| `RFM69_SetPacketConfig` | Select Packet Configuration  |`RFM69_PACKET_FORMAT_FIXED`<br> `RFM69_PACKET__FORMAT_VARIABLE`<br> `RFM69_DC_FREE_NONE`<br> `RFM69_DC_FREE_MANCHESTER`<br> `RFM69_DC_FREE_WHITENING`<br> `RFM69_CRC_OFF`<br> `RFM69_CRC_ON`<br> `RFM69_CRC_AUTOCLEAR_ON`<br> `RFM69_CRC_AUTOCLEAR_OFF`<br> `RFM69_FILTER_NONE`<br> `RFM69_FILTER_NODE`<br> `RFM69_FILTER_NODE_BROADCAST`  |
 
 </details>
 
