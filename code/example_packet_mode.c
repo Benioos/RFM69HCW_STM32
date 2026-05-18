@@ -21,7 +21,7 @@ int main(void)
   RFM69_PowerAmplifierSelection(PA_1, 13);
 
   uint8_t message[] = "SATELLITE_TEST";
-  RFM69_SetPacketConfig();
+  RFM69_SetPacketConfig(RFM69_PACKET_VARIABLE, RFM69_DC_FREE_NONE, RFM69_CRC_ON, RFM69_CRC_AUTOCLEAR_ON, RFM69_FILTER_NONE);
 }
 
 while (1)
