@@ -5,13 +5,9 @@ This is a C driver for the **RFM69HCW / SX1231** RF transceiver, designed for **
 This library provides a way of controlling the radio module over SPI.
 
 
-<img src="https://cdn-shop.adafruit.com/970x728/3070-07.jpg" alt="Texte alternatif" width="300">
+<img src="https://cdn-shop.adafruit.com/970x728/3070-07.jpg" alt="Adafruit RFM69HCW Transceiver Radio" width="260">
 
-## 🚀 QUICK START 
-
-Take a look at the example :  `example.c`
-
-## 💻 SPI recommanded configuration
+## 💻 SPI recommended configuration
 
 The SPI was configured as follows:
 
@@ -41,19 +37,19 @@ The SPI was configured as follows:
 ### ⚙️ Radio Initialisation
 
 - `RFM69_Init` → Initialize SPI interface and Chip Select pin
-- `RFM69_SetMode` → Select operating mode
+- `RFM69_SetMode` → Select operating mode type
 - `RFM69_GetMode` → Get operating mode
 - `RFM69_SetKeyValues_Sync` → Set Key to link two modules.
 
 <details>
 <summary> Full reference </summary>
 
-| Radio Initialisation | Description | Example/Available Modes |
+| Radio Initialization| Description | Example/Available Modes |
 | :--- | :---: | :--- |
 | `RFM69_Init` | Initialize SPI interface and Chip Select pin | ```RFM69_Init(&hspi1, GPIOC, GPIO_PIN_7);``` |
-| `RFM69_SetMode` | Select operating mode  |`RFM69_MODE_SLEEP`<br> `RFM69_MODE_FREQUENCYSYNTHER`  <br> `RFM69_MODE_STDBY` <br> `RFM69_MODE_RX` <br> `RFM69_MODE_TX` |
+| `RFM69_SetMode` | Select operating mode type  |`RFM69_MODE_SLEEP`<br> `RFM69_MODE_FREQUENCYSYNTHER`  <br> `RFM69_MODE_STDBY` <br> `RFM69_MODE_RX` <br> `RFM69_MODE_TX` |
 | `RFM69_GetMode` | Get operating mode  | |
-| `RFM69_SetKeyValues_Sync` | Set Key to link two modules. <br> **Must be identical on both modules**  <br> ***Max key lenght 8***  |  ```uint8_t mykey[] = {0x42, 0x24};``` <br> ```RFM69_SetSyncValues(mykey, 2);``` |
+| `RFM69_SetKeyValues_Sync` | Set Key to link two modules. <br> **Must be identical on both modules**  <br> ***Max key length 8***  |  ```uint8_t mykey[] = {0x42, 0x24};``` <br> ```RFM69_SetSyncValues(mykey, 2);``` |
 
 </details>
 
@@ -76,24 +72,24 @@ The SPI was configured as follows:
 
 ### 📶 Modulation & Packet Engine
 
-- `RFM69_SetModulationType` → Choice of Modulation 
-- `RFM69_SetDataProcessingMode` → Choice of Data Processing
-- `RFM69_SetDataShaping` → Choice of Data Shaping
+- `RFM69_SetModulationType` → Select modulation type
+- `RFM69_SetDataProcessingMode` → Select Data Processing type
+- `RFM69_SetDataShaping` → Select Data Shaping type
 
 <details>
 <summary> Full reference </summary>
 
 | Modulation & Packet Engine | Description | Example/Available Modes |
 | :--- | :---: | :--- |
-| `RFM69_SetModulationType` | Choice of Modulation  |`RFM69_MODUL_FSK`<br> `RFM69_MODUL_OOK`  |
-| `RFM69_SetDataProcessingMode` | Choice of Data Processing  |`RFM69_PACKET_MODE`<br> `RFM69_CONTINUOUS_SYNC`  <br> `RFM69_CONTINUOUS_RAW` |
-| `RFM69_SetDataShaping` | Choice of Data Shaping  |`RFM69_SHAPING_NONE`<br> `RFM69_SHAPING_Gaussianfilter_BT1`<br> `RFM69_SHAPING_Gaussianfilter_BT05`<br> `RFM69_SHAPING_Gaussianfilter_BT03`  |
+| `RFM69_SetModulationType` | Select Modulation type  |`RFM69_MODUL_FSK`<br> `RFM69_MODUL_OOK`  |
+| `RFM69_SetDataProcessingMode` | Select Data Processing type  |`RFM69_PACKET_MODE`<br> `RFM69_CONTINUOUS_SYNC`  <br> `RFM69_CONTINUOUS_RAW` |
+| `RFM69_SetDataShaping` | Select Data Shaping type  |`RFM69_SHAPING_NONE`<br> `RFM69_SHAPING_Gaussianfilter_BT1`<br> `RFM69_SHAPING_Gaussianfilter_BT05`<br> `RFM69_SHAPING_Gaussianfilter_BT03`  |
 
 </details>
 
 ### 📤 Transmission
 
-- `RFM69_PowerAmplifierSelection` → Choice of Power Amplifier ***Pout = PA_... + OutputPower [dBm]***
+- `RFM69_PowerAmplifierSelection` → Select Power Amplifier type ***Pout = PA_... + OutputPower [dBm]***
 - `RFM69_FlushFIFO` → Flush FIFO
 - `RFM69_SendMessage` →  Send message
 
@@ -102,7 +98,7 @@ The SPI was configured as follows:
 
 | Transmission | Description | Example/Available Modes |
 | :--- | :---: | :--- |
-| `RFM69_PowerAmplifierSelection` | Choice of Power Amplifier <br> ***Pout = PA_... + OutputPower [dBm]***  |`PA_0 => Start from -18 to +13 dbm `<br> `PA_1 => Start from -18 to +13 dbm`<br> `PA_1_2 => Start from -14 to +17 dbm `<br> `PA_HIGH_POWER => Start from -11 to +20 dbm`<br>  |
+| `RFM69_PowerAmplifierSelection` | Select Power Amplifier type <br> ***Pout = PA_... + OutputPower [dBm]***  |`PA_0 => Start from -18 to +13 dbm `<br> `PA_1 => Start from -18 to +13 dbm`<br> `PA_1_2 => Start from -14 to +17 dbm `<br> `PA_HIGH_POWER => Start from -11 to +20 dbm`<br>  |
 | `RFM69_FlushFIFO` | Flush FIFO  | |
 | `RFM69_SendMessage` | Send message   uint8_t message[] = "SATELLITE_TEST";<br>RFM69_SendMessage( message, 14);  |
 
@@ -188,18 +184,23 @@ The SPI was configured as follows:
 
 </details>
 
+---
 
 
 ## ⚠️ Important notes
 - Key Sync have to be the same on each module
 - Bitrates have to be the same on each module
   
-## Liens utiles / Resources
+## 🔗 Resources & Links
 * [Official Website](https://www.adafruit.com/product/3071)
 * [Datasheet RFM69HCW](https://cdn.sparkfun.com/datasheets/Wireless/General/RFM69HCW-V1.1.pdf)
 * [Guide d'apprentissage Adafruit](https://learn.adafruit.com/adafruit-rfm69hcw-and-rfm96-rfm95-rfm98-lora-packet-padio-breakouts/downloads)
 
+## 📄 License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
 ---
+
 
 ## 🧪 Connection Troubleshooting
 
@@ -238,3 +239,4 @@ Simply comment or uncomment the following line:
     #define RFM69_printf(...)
 #endif
 ```
+
