@@ -95,7 +95,7 @@ The SPI was configured as follows:
 
 - `RFM69_PowerAmplifierSelection` → Select Power Amplifier type ***Pout = PA_... + OutputPower [dBm]***
 - `RFM69_FlushFIFO` → Flush FIFO
-- `RFM69_SendMessage` →  Send message
+- `RFM69_SendMessage_Packet_Mode` →  Send message
 
 <details>
 <summary> Full reference </summary>
@@ -104,7 +104,7 @@ The SPI was configured as follows:
 | :--- | :---: | :--- |
 | `RFM69_PowerAmplifierSelection` | Select Power Amplifier type <br> ***Pout = PA_... + OutputPower [dBm]***  |`PA_0 => Start from -18 to +13 dbm `<br> `PA_1 => Start from -18 to +13 dbm`<br> `PA_1_2 => Start from -14 to +17 dbm `<br> `PA_HIGH_POWER => Start from -11 to +20 dbm`<br>  |
 | `RFM69_FlushFIFO` | Flush FIFO  | |
-| `RFM69_SendMessage` | Send message   uint8_t message[] = "SATELLITE_TEST";<br>RFM69_SendMessage( message, 14);  |
+| `RFM69_SendMessage_Packet_Mode` | Send message   uint8_t message[] = "SATELLITE_TEST";<br>RFM69_SendMessage( message, 14);  |
 
 </details>
 
