@@ -240,3 +240,5 @@ Simply comment or uncomment the following line:
 #endif
 ```
 
+Note: To use the printf debug feature on STM32, make sure you have redirected stdout to your UART peripheral (by overriding the _write function).
+
