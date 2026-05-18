@@ -7,6 +7,8 @@ This library provides a way of controlling the radio module over SPI.
 
 <img src="https://cdn-shop.adafruit.com/970x728/3070-07.jpg" alt="Adafruit RFM69HCW Transceiver Radio" width="260">
 
+**Note : NEW FUNCTION COMING THIS WEEK**
+
 ## 💻 SPI recommended configuration
 
 The SPI was configured as follows:
