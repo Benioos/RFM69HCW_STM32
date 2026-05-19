@@ -78,6 +78,7 @@ The SPI was configured as follows:
 - `RFM69_SetDataProcessingMode` → Select Data Processing type
 - `RFM69_SetDataShaping` → Select Data Shaping type
 - `RFM69_SetPacketConfig` → Select Packet Configuration
+- `RFM69_SetDefaultDioMapping` → Set DIO Mapping Default (Important if you use RAW Mode)
 
 <details>
 <summary> Full reference </summary>
@@ -88,6 +89,7 @@ The SPI was configured as follows:
 | `RFM69_SetDataProcessingMode` | Select Data Processing type  |`RFM69_PACKET_MODE`<br> `RFM69_CONTINUOUS_SYNC`  <br> `RFM69_CONTINUOUS_RAW` |
 | `RFM69_SetDataShaping` | Select Data Shaping type  |`RFM69_SHAPING_NONE`<br> `RFM69_SHAPING_Gaussianfilter_BT1`<br> `RFM69_SHAPING_Gaussianfilter_BT05`<br> `RFM69_SHAPING_Gaussianfilter_BT03`  |
 | `RFM69_SetPacketConfig` | Select Packet Configuration  |`RFM69_PACKET_FORMAT_FIXED`<br> `RFM69_PACKET__FORMAT_VARIABLE`<br> `RFM69_DC_FREE_NONE`<br> `RFM69_DC_FREE_MANCHESTER`<br> `RFM69_DC_FREE_WHITENING`<br> `RFM69_CRC_OFF`<br> `RFM69_CRC_ON`<br> `RFM69_CRC_AUTOCLEAR_ON`<br> `RFM69_CRC_AUTOCLEAR_OFF`<br> `RFM69_FILTER_NONE`<br> `RFM69_FILTER_NODE`<br> `RFM69_FILTER_NODE_BROADCAST`  |
+| `RFM69_SetDefaultDioMapping` | Set DIO Mapping Default (Important if you use RAW Mode) | By default DIO1 is DCLK (Clock) |
 
 </details>
 
@@ -232,17 +234,49 @@ Simply comment or uncomment the following line:
 
 ```c
 /*
- * Enable/Disable global DEBUG printf
- * Comment to disable all debug outputs
+ * Activate And Deactivate all DEBUG PRINTF and Delay in one time !
+ * You only need to comment or uncomment the line below
  */
 #define RFM69_DEBUG_ENABLED
 
 #ifdef RFM69_DEBUG_ENABLED
-    #define RFM69_printf(...) printf(__VA_ARGS__)
+    #define RFM69_printf(color, prefix, ...) \
+        printf(color prefix X " : " __VA_ARGS__)
+	#define RFM69_printfs(...) printf(__VA_ARGS__)
 #else
-    #define RFM69_printf(...)
+    #define RFM69_printf(color, prefix, ...)
+	#define RFM69_printfs(...)
+#endif
+
+#ifdef RFM69_DEBUG_ENABLED
+    #define RFM69_Delay(...) HAL_Delay(__VA_ARGS__)
+#else
+    #define RFM69_Delay(...)
 #endif
 ```
 
-Note: To use the printf debug feature on STM32, make sure you have redirected stdout to your UART peripheral (by overriding the _write function).
+#### Example
+
+```c
+RFM69_printf(R, "!Incorrect", "must be in Standby Mode\r\n");
+RFM69_printf(R, "!ABORD", "\r\n");
+```
+
+### ANSI color codes
+
+```c
+#define R "\033[31m"  // Rouge
+#define G "\033[32m"  // Vert
+#define J "\033[33m"  // Jaune
+#define B "\033[34m"  // Bleu
+#define M "\033[35m"  // Magenta
+#define C "\033[36m"  // Cyan
+#define W "\033[37m"  // Blanc
+#define X "\033[0m"   // Reset
+```
+
+### Note
+
+To use the `printf` debug feature on STM32, make sure you have redirected `stdout` to your UART peripheral (by overriding the `_write` function).
+
 
