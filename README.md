@@ -9,7 +9,15 @@ This library provides a way of controlling the radio module over SPI.
 
 **Note : NEW FUNCTION COMING THIS WEEK**
 
-## 💻 SPI recommended configuration
+## 📖 Documentation
+To help you understand or modify the project, the documentation has been split into detailed sections:
+*   💻 [RFM69HCW Packet Mode Details](docs/Packet_Mode.md) — Understand how to make a simple communication using Packet Mode
+*   📊 [RFM69HCW RAW Mode Details](docs/RAW_Modes.md) — Understand how to use RAW Mode
+*   🔒 [Payload Encryption Guide](docs/AES.md) — How to secure your data using external cryptographic libraries.
+*   🪲 [Debug](docs/debug.md) — Simple Debug Implementation
+*   🚨 [TroubleShooting](docs/troubleshooting.md) — Many response to a lot of error...
+
+## 💡 SPI recommended configuration
 
 The SPI was configured as follows:
 
@@ -192,29 +200,6 @@ The SPI was configured as follows:
 
 ---
 
-## 📟 RAW Mode Explanation
-
-## The RAW mode 
-
-![Schéma de la trame AX25](Image/Trame.png)
-
-By default, the RFM69HCW is designed to handle packet processing automatically (adding its own preambles, sync words, and CRC). However, the standard AX.25 frame used in packet radio and APRS has its own strict structure, custom CRC (FCS), and bit-stuffing mechanism that do not match the RFM69 chip's native packet engine.
-
-To bypass the chip's internal packet processing and gain full control over every single bit sent over the air, we use the **RAW Mode** (also known as Continuous Mode).
-
-### How it Works
-In RAW mode, the RFM69HCW acts as a "dumb" radio pipe:
-* **In Transmission (TX):** The microcontroller manually generates the entire AX.25 frame—including the `0x7E` flags, shifted addresses, control bytes, payload, and the calculated FCS. It then feeds this bitstream directly to the RFM69's `DATA` pin in real-time, matching the desired bitrate (usually 1200 bps AFSK or 9600 bps GFSK).
-* **In Reception (RX):** The chip simply demodulates the incoming radio signal and dumps the raw bitstream onto the `DATA` pin. The microcontroller must constantly poll this pin to look for the `0x7E` preamble flag, perform bit-unstuffing, and validate the FCS.
-
-🔒 Data Security & Encryption
-Since we have absolute control over the payload in RAW mode, the data inside the Information Field can be fully encrypted before being packed into the AX.25 frame.
-
-By integrating an external encryption library (such as custom AES, ChaCha20, or XOR libraries available on GitHub), you can secure the payload over the air. The receiving end will capture the raw AX.25 frame, extract the payload, and decrypt it using the same library and cryptographic key.
-
----
-
-
 ## ⚠️ Important notes
 - Key Sync have to be the same on each module
 - Bitrates have to be the same on each module
@@ -228,74 +213,6 @@ By integrating an external encryption library (such as custom AES, ChaCha20, or 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
-
-
-## 🧪 Connection Troubleshooting
-
-If the module does not respond correctly, check the SPI communication.
-
-### ✔️ Step 1 — Verify chip detection
-
-Read the register:
-
-- `RegVersion` = `0x10`
-
-Expected value:
-- `0x24`
-
-👉 If the value is different, it means:
-- SPI wiring issue, or
-- incorrect configuration
----
-
-## 🔧 Debug Configuration
-
-To enable or disable all `printf` debug outputs, edit `RFM69HCW.h`.
-
-Simply comment or uncomment the following line:
-
-```c
-/*
- * Activate And Deactivate all DEBUG PRINTF and Delay in one time !
- * You only need to comment or uncomment the line below
- */
-#define RFM69_DEBUG_ENABLED
-
-#ifdef RFM69_DEBUG_ENABLED
-    #define RFM69_printf(color, prefix, ...) \
-        printf(color prefix X " : " __VA_ARGS__)
-	#define RFM69_printfs(...) printf(__VA_ARGS__)
-#else
-    #define RFM69_printf(color, prefix, ...)
-	#define RFM69_printfs(...)
-#endif
-
-#ifdef RFM69_DEBUG_ENABLED
-    #define RFM69_Delay(...) HAL_Delay(__VA_ARGS__)
-#else
-    #define RFM69_Delay(...)
-#endif
-```
-
-#### Example
-
-```c
-RFM69_printf(R, "!Incorrect", "must be in Standby Mode\r\n");
-RFM69_printf(R, "!ABORD", "\r\n");
-```
-
-### ANSI color codes
-
-```c
-#define R "\033[31m"  // Rouge
-#define G "\033[32m"  // Vert
-#define J "\033[33m"  // Jaune
-#define B "\033[34m"  // Bleu
-#define M "\033[35m"  // Magenta
-#define C "\033[36m"  // Cyan
-#define W "\033[37m"  // Blanc
-#define X "\033[0m"   // Reset
-```
 
 ### Note
 
