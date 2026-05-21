@@ -22,3 +22,9 @@ Use `RFM69_SetDataProcessingMode` with the parameter `RFM69_CONTINUOUS_RAW` to u
 Use `RFM69_SetDataProcessingMode` with the parameter `RFM69_CONTINUOUS_SYNC`.
 
 > 💡 **Synchronization Trick:** We use `RFM69_CONTINUOUS_SYNC` mode in RX instead of pure RAW mode. This allows the RFM69 hardware to automatically sync, simplifying the bit-synchronization between both modules and saving precious MCU processing time.
+
+### Implemented Features
+
+* **Flexible Configuration:** Easily change the module's destination/source address.
+* **Error Detection:** Complete CRC-16 (AX.25) error detection is fully implemented to ensure packet integrity.
+* **Security Validation:** You can easily customize the validation logic to filter out unauthorized or spoofed "pirate" messages.
