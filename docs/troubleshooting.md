@@ -33,4 +33,4 @@ If you encounter any issues while setting up or running the project, find your s
 
 > [!NOTE]
 > **How to fix:**
-> 1. Check all the 
+> 1. Check all the wires.
