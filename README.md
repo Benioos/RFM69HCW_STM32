@@ -188,6 +188,25 @@ To help you understand or modify the project, the documentation has been split i
 
 </details>
 
+### 📥 RAW Mode
+
+- `RFM69_RAW_Show_Trame` → Show Trame for Debug
+- `RFM69_RAW_FillUp_Trame` → Set Text in Trame Struct
+- `RFM69_Transmit_Byte_Raw` → Send 1 Byte in RAW Mode
+- `RFM69_Send_Message_Raw` → Automatic Send Message in RAW Mode
+
+<details>
+<summary> Full reference </summary>
+
+| Reception | Description | Example/Available Modes |
+| :--- | :---: | :--- |
+| `RFM69_RAW_Show_Trame` | Show Trame for Debug  | |
+| `RFM69_RAW_FillUp_Trame` | Set Text in Trame Struct  |  |
+| `RFM69_Transmit_Byte_Raw` | Send 1 Byte in RAW Mode  | |
+| `RFM69_Send_Message_Raw` | Automatic Send Message in RAW Mode  | |
+
+</details>
+
 ---
 ## 💡 SPI recommended configuration
 
