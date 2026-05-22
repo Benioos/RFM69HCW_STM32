@@ -190,20 +190,22 @@ To help you understand or modify the project, the documentation has been split i
 
 ### 📥 RAW Mode
 
-- `RFM69_RAW_Show_Trame` → Show Trame for Debug
-- `RFM69_RAW_FillUp_Trame` → Set Text in Trame Struct
-- `RFM69_Transmit_Byte_Raw` → Send 1 Byte in RAW Mode
-- `RFM69_Send_Message_Raw` → Automatic Send Message in RAW Mode
-
+- `RFM69_Text_To_Binary_Payload` → Transform Text to Binary format before sending 
+- `RFM69_RAW_FillUp_Playload` → Fill Up Playload before sending
+- `RFM69_RAW_DATA_SEND` → Automatic Send Message in RAW Mode
+- `RFM69_RAW_Transmit_Byte` → Transmit byte over radio
+- `RFM69_RAW_CRC16_Calculation` → Calculate CRC16 for error check
+- 
 <details>
 <summary> Full reference </summary>
 
 | Reception | Description | Example/Available Modes |
 | :--- | :---: | :--- |
-| `RFM69_RAW_Show_Trame` | Show Trame for Debug  | |
-| `RFM69_RAW_FillUp_Trame` | Set Text in Trame Struct  |  |
-| `RFM69_Transmit_Byte_Raw` | Send 1 Byte in RAW Mode  | |
-| `RFM69_Send_Message_Raw` | Automatic Send Message in RAW Mode  | |
+| `RFM69_Text_To_Binary_Payload` | Transform Text to Binary format before sending  |  |
+| `RFM69_RAW_FillUp_Playload` | Fill Up Playload before sending  | |
+| `RFM69_RAW_DATA_SEND` | Automatic Send Message in RAW Mode  | |
+| `RFM69_RAW_Transmit_Byte` | Transmit byte over radio | |
+| `RFM69_RAW_CRC16_Calculation` | Calculate CRC16 for error check | |
 
 </details>
 
