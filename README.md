@@ -226,6 +226,10 @@ The SPI was configured as follows:
 ## 📄 License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## 🔗 Vocabulary 
+* Playload = data, message send
+* 
+
 ---
 
 ### Note
