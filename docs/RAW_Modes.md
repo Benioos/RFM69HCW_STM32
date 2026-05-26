@@ -179,3 +179,66 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 }
 ```
 
+### How Works the callback  :
+
+It use a state machine with 3 state :STATE_RECHERCHE_FLAG STATE_VERIF_ADRESSE and STATE_CAPTURE_DONNEES
+Then it use some filter. 
+> Noise filter is looking for 101010101 to synchrnoise with emitter.
+```c
+/*
+ * FILTER : NOISE
+ */
+if (State_Machine_RX == STATE_RECHERCHE_FLAG)
+{
+	if (Bit_Received == LastBit_Received)
+	{
+		Bit_Identical_Counter++;
+		if (Bit_Identical_Counter >= 16)
+		{
+			return;
+		}
+	} else {
+		Bit_Identical_Counter = 0;
+		LastBit_Received = Bit_Received;
+	}
+}
+```
+> flag filter is looking for 0x7E to start reading data.
+```c
+/*
+ * FILTER : FLAG 0x7E
+ */
+if (State_Machine_RX == STATE_RECHERCHE_FLAG)
+{
+	Register_Swipe = (Register_Swipe << 1) | Bit_Received;
+	if (Register_Swipe == 0x7E)
+	{
+		State_Machine_RX = STATE_VERIF_ADRESSE;
+		Adress_Received = 0;
+		Bit_Counter = 7;
+		Temporary_Byte = 0x00;
+		trame.flag_start = 0x7E;
+	}
+	return;
+}
+```
+> flag adress is looking for the adress 
+```c
+/*
+ * FILTER : Check Adress
+ */
+if (State_Machine_RX == STATE_VERIF_ADRESSE)
+{
+	if (octet_valide == adresse_cible[Adress_Received]) {
+		rx_trame.adresse[Adress_Received] = octet_valide;
+		Adress_Received++;
+		if (Adress_Received >= 14)
+		{
+			State_Machine_RX = STATE_CAPTURE_DONNEES;
+			rx_idx_octet_paquet = 0;
+		}
+	} else {
+		State_Machine_RX = STATE_RECHERCHE_FLAG;
+	}
+}
+```
