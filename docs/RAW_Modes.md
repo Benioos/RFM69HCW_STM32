@@ -34,7 +34,7 @@ RFM69_SetDataProcessingMode(RFM69_CONTINUOUS_SYNC);
 > `RFM69_CONTINUOUS_SYNC` is used on RX to let the hardware automatically recover the clock signal.  
 > This greatly simplifies bit synchronization and reduces MCU processing load.
 
-# ✔️ Example
+### ✔️ Example
 
 > Example for **transmitter (TX)** :
 
