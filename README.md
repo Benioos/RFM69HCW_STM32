@@ -196,10 +196,8 @@ To help you understand or modify the project, the documentation has been split i
 - `RFM69_RAW_Transmit_Byte` → Transmit byte over radio
 - `RFM69_RAW_CRC16_Calculation_Buffer` → Calculate CRC16 for error check
 - `RFM69_Pad_To_256` → Complete Data buffer to be up to 256 bytes
-- `RFM69_RAW_Show_Trame` → Show playload
 - `RFM69_CRC_Check` → CRC Check
-- `RFM69_RAW_DATATYPE` → Get DataType
-- `RFM69_RAW_SHOW_DATA` → Show playload in function of data type
+- `GET_DASHBOARD` → Show playload
   
 <details>
 <summary> Full reference </summary>
@@ -212,10 +210,8 @@ To help you understand or modify the project, the documentation has been split i
 | `RFM69_RAW_Transmit_Byte` | Transmit byte over radio | |
 | `RFM69_RAW_CRC16_Calculation_Buffer` | Calculate CRC16 for error check | |
 | `RFM69_Pad_To_256` | Complete Data buffer to be up to 256 bytes | |
-| `RFM69_RAW_Show_Trame` | Show playload | |
 | `RFM69_CRC_Check` | CRC Check | |
-| `RFM69_RAW_DATATYPE` | Get DataType | |
-| `RFM69_RAW_SHOW_DATA` | Show playload in function of data type | |
+| `GET_DASHBOARD` | Show playload  | |
 
 </details>
 
