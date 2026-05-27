@@ -14,6 +14,20 @@
 #include  <string.h>
 #include <ctype.h>
 
+// Broche de données (DATA)
+#define RFM_DATA_PIN            GPIO_PIN_4
+#define RFM_DATA_PORT           GPIOB
+
+// Broche d'horloge (DCLK)
+#define RFM_DCLK_PIN            GPIO_PIN_12
+#define RFM_DCLK_PORT           GPIOF
+#define RFM_DCLK_EXTI_IRQn      EXTI15_10_IRQn
+
+
+
+
+
+
 #define RegVersion 0x10 // Version code of the chips
 
 #define RegFrfMsb 0x07  // MSB of the RF carrier frequency
@@ -55,7 +69,6 @@
 #define PLLock 0x10
 #define TxReady 0x20
 #define PacketSend 0x08
-
 #define FStep 61 //Hz
 
 #define TimeoutPacketNotSend 500 // Time before error when packet not send
@@ -63,19 +76,52 @@
 
 #define RegFdevMsb 0x05 // Frequency Deviation setting, Most Significant Bits
 
+#define REG_IRQFLAGS2 0x28
+#define FIFO_NOT_EMPTY 0x40
+#define RegIrqFlags1 0x27
 
+#define RegDioMapping1 0x25
 /*
- * Activate And Deactivate all DEBUG PRINTF in one time !
+ * Activate And Deactivate all DEBUG PRINTF and Delay in one time !
  * You only need to comment or uncomment the line below
  */
 #define RFM69_DEBUG_ENABLED
 
+#define CLEAR_SCREEN    "\033[2J"
+#define CURSOR_HOME     "\033[H"
+#define HIDE_CURSOR     "\033[?25l"
+#define SHOW_CURSOR     "\033[?25h"
+
 #ifdef RFM69_DEBUG_ENABLED
-    #define RFM69_printf(...) printf(__VA_ARGS__)
+    #define RFM69_printf(color, prefix, ...) \
+        printf(color prefix X __VA_ARGS__)
+    #define RFM69_printfs(...) printf(__VA_ARGS__)
+
+    #define RFM69_REFRESH_SCREEN() printf(CURSOR_HOME)
+
+    #define RFM69_INIT_DASHBOARD() printf(CLEAR_SCREEN HIDE_CURSOR)
 #else
-    #define RFM69_printf(...)
+    #define RFM69_printf(color, prefix, ...)
+    #define RFM69_printfs(...)
+    #define RFM69_REFRESH_SCREEN()
+    #define RFM69_INIT_DASHBOARD()
 #endif
 
+#ifdef RFM69_DEBUG_ENABLED
+    #define RFM69_Delay(...) HAL_Delay(__VA_ARGS__)
+#else
+    #define RFM69_Delay(...)
+#endif
+
+// Couleurs
+#define R "\033[31m"  // Red
+#define G "\033[32m"  // Green
+#define J "\033[33m"  // Yellow
+#define B "\033[34m"  // Blue
+#define M "\033[35m"  // Magenta
+#define C "\033[36m"  // Cyan
+#define W "\033[37m"  // White
+#define X "\033[0m"   // Reset
 
 /*
  * Init SPI Pin and CS pin
@@ -109,6 +155,10 @@ typedef enum {
 } RFM69_DataProcessingMode_t;
 void RFM69_SetDataProcessingMode(RFM69_DataProcessingMode_t mode);
 
+/*
+ * Set DIO Mapping Default
+ */
+void RFM69_SetDefaultDioMapping(void);
 
 /*
  * Modulation Type
@@ -345,17 +395,82 @@ void RFM69_SetAfcAutoclear(RFM69_AfcAutoclear_t state);
 uint8_t RFM69_GetTemperature(void);
 
 /*
+ * AX25 Initialisation
+ */
+
+/*
  * AX.25 Structure of Data
  */
 typedef struct {
-    uint8_t  flag_start;    // 1 octet
-    uint8_t  adresse[14];   // 14 octets
-    uint8_t  control;       // 1 octet
-    uint8_t  data[256];     // 256 octets
-    uint16_t fcs;           // 2 octets (Le compilateur va aligner ce champ)
-    uint8_t  flag_end;      // 1 octet
+    uint8_t control;          // 1 Byte
+    uint8_t Type_Data;        // 1 Byte
+    uint8_t data[254];        // 254 Bytes
+}Payload;
+
+typedef struct {
+    uint8_t  flag_start;    // 1 Bytes
+    uint8_t  adresse[14];   // 14 Bytes
+    Payload payload;		// 256 Bytes
+    uint16_t fcs;           // 2 Bytes
+    uint8_t  flag_end;      // 1 Bytes
 } TrameAX;
-void display_trame(const TrameAX *trame);
-int Fill_Up_Data(TrameAX *trame, const char *message);
+
+/*
+ * RAW MODE : Text to Binary Payload
+ */
+uint16_t RFM69_Text_To_Binary_Payload(const char *texte, uint8_t *payload);
+
+/*
+ * CRC 16 bits
+ */
+uint16_t RFM69_RAW_CRC16_Calculation_Buffer(const uint8_t *data, uint16_t length);
+
+/*
+ * FIll Up Trame
+ */
+void RFM69_RAW_FillUp_Payload(TrameAX *trame,const uint8_t adresse[14],uint8_t  control, uint8_t Type_Data, const uint8_t *payload,uint8_t size_payload, uint16_t fcs_val);
+
+/*
+  * RAW Mode SEND PAYLOAD
+*/
+void RFM69_RAW_DATA_SEND(const uint8_t *buffer, uint16_t size);
+
+/*
+ * RAW Mode Transmit Byte
+ */
+void RFM69_RAW_Transmit_Byte(uint8_t data);
+
+/*
+ * Print Bytes
+ */
+void RFM69_PrintBits(uint8_t byte);
+
+/*
+ * WaitForPLLLock
+ */
+uint8_t RFM69_WaitForPLLLock(uint32_t timeout_ms);
+
+/*
+ * WaitForTxReady
+ */
+uint8_t RFM69_WaitForTxReady(uint32_t timeout_ms);
+
+void RFM69_Pad_To_256(uint8_t *buffer, uint16_t len);
+
+/*
+ * Verification CRC
+ */
+uint8_t RFM69_CRC_Check(uint16_t crc_rx, const volatile uint8_t rx_buffer_paquet[]);
+
+
+/*
+ * DashBoard
+ */
+void GET_DASHBOARD(const volatile TrameAX *trame);
+
+/*
+ * CRC Check DASHBOARD
+ */
+void CRC_CHECK(const TrameAX *trame);
 
 #endif /* INC_RFM69HCW_H_ */

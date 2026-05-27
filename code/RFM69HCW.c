@@ -594,7 +594,7 @@ void RFM69_getConfigData()
 	uint8_t modulation = (val & 0x18);
 	uint8_t shaping = (val & 0x03);
 
-	RFM69_printfs("\r\n --- Config Data RFM69HCW ---\r\n");
+	RFM69_printfs("--- Config Data RFM69HCW ---\r\n");
 
 	if(mode == RFM69_PACKET_MODE)
 	{
@@ -654,35 +654,40 @@ void RFM69_getConfigData()
 
 }
 
+
+
+
+/*
+ * RAW MODE : Text to Binary Payload
+ */
+uint16_t RFM69_Text_To_Binary_Payload(const char *texte, uint8_t *payload)
+{
+	uint16_t len = (uint16_t) strlen(texte);
+    uint16_t limited_len = (len > 254) ? 254 : len;
+    memcpy(payload, texte, limited_len);
+    return len;
+}
+
 /*
  * Fill Up Trame
  */
 #define CLEAR_BUFFER(buf) memset((buf), 0, sizeof(buf))
-
-void RFM69_RAW_FillUp_Playload(TrameAX *trame,const uint8_t adresse[14],uint8_t  control, uint8_t Type_Data, const uint8_t *payload,uint8_t size_payload, uint16_t fcs_val)
+void RFM69_RAW_FillUp_Payload(TrameAX *trame, const uint8_t adresse[14], uint8_t control, uint8_t Type_Data, const uint8_t *payload_data, uint8_t size_payload, uint16_t fcs_val)
 {
     trame->flag_start = 0x7E;
     memcpy(trame->adresse, adresse, 14);
-    trame->control    = control; //(Have to be Encrypted)
-    trame -> Type_Data = Type_Data; //(Have to be Encrypted)
-    CLEAR_BUFFER(trame->data);
-    memcpy(trame->data, payload, size_payload); //(Have to be Encrypted)
+
+    trame->payload.control   = control;
+    trame->payload.Type_Data = Type_Data;
+
+    memcpy(trame->payload.data, payload_data, 254);
+
     trame->fcs        = (fcs_val >> 8) | (fcs_val << 8);
     trame->flag_end   = 0x7E;
 }
 
 /*
- * RAW MODE : Text to Binary Payload
- */
-uint8_t RFM69_Text_To_Binary_Payload(const char *texte, uint8_t *payload)
-{
-    uint8_t len = (uint8_t)strlen(texte);
-    memcpy(payload, texte, len);
-    return len;
-}
-
-/*
-  * RAW Mode SEND PLAYLOAD
+  * RAW Mode SEND PAYLOAD
 */
 void RFM69_RAW_DATA_SEND(const uint8_t *buffer, uint16_t size)
 {
@@ -703,7 +708,7 @@ void RFM69_RAW_DATA_SEND(const uint8_t *buffer, uint16_t size)
     	RFM69_RAW_Transmit_Byte(0x55);
     }
 
-    // Send PlayLoad
+    // Send PayLoad
     for (uint16_t i = 0; i < size; i++) {
     	RFM69_RAW_Transmit_Byte(buffer[i]);
     }
@@ -766,12 +771,17 @@ uint16_t RFM69_RAW_CRC16_Calculation_Buffer(const uint8_t *data, uint16_t length
 
 void RFM69_Pad_To_256(uint8_t *buffer, uint16_t len)
 {
-    if (len > 256)
-        len = 256;
-
-    for (uint16_t i = len; i < 256; i++)
+    if (len > 254)
     {
-        buffer[i] = 0x00;
+        RFM69_printf(R, "!ERROR", "Too long.. %d >254 bytes\r\n", len);
+        RFM69_printf(R, "!ERROR", "Payload won't be send normally\r\n");
+        RFM69_printf(R, "!ERROR", "NEED TO ABORD\r\n");
+        len = 254;
+    }
+
+    for (uint16_t i = len; i < 254; i++)
+    {
+        buffer[i] = 0x55;
     }
 }
 
@@ -819,49 +829,16 @@ uint8_t RFM69_WaitForTxReady(uint32_t timeout_ms)
     return 1;
 }
 
-/*
- * Helper to display a byte in binary format
- */
-void RFM69_PrintBits(uint8_t byte)
-{
-    char bit_str[9]; // 8 bits + '\0'
-
-    for (int i = 7; i >= 0; i--) {
-        bit_str[7 - i] = ((byte >> i) & 1) ? '1' : '0';
-    }
-    bit_str[8] = '\0';
-
-    printf("%s [%02X] ", bit_str, byte);
-}
-
-/*
- * PlayLoad Print :
- */
-uint16_t RFM69_RAW_Show_Trame(uint16_t rx_longueur_paquet, const volatile uint8_t rx_buffer_paquet[])
-{
-	RFM69_printf(G, "[RADIO RX]", "Playload Detected.\r\n");
-	RFM69_printf(G, "[RAW DATA]", "\r\n");
-	for (int i = 2; i < rx_longueur_paquet; i++)
-	{
-	    RFM69_printfs("%02X ", rx_buffer_paquet[i]);
-	}
-	RFM69_printfs("\r\n");
-	RFM69_printf(G, "[Playload Control]", "0x%02X\r\n", rx_buffer_paquet[0]);
-	RFM69_printf(G, "[Playload TypeData]", "0x%02X\r\n", rx_buffer_paquet[1]);
-	uint16_t crc_rx = ((uint16_t)rx_buffer_paquet[rx_longueur_paquet - 2] << 8) | (uint16_t)rx_buffer_paquet[rx_longueur_paquet - 1];
-	RFM69_printf(G, "[Playload CRC]", "0x%04X\r\n", crc_rx);
-	return crc_rx;
-}
 
 /*
  * Verification CRC
  */
 uint8_t RFM69_CRC_Check(uint16_t crc_rx, const volatile uint8_t rx_buffer_paquet[])
 {
-	uint8_t local_data[256];
-	memcpy(local_data, (const void *)&rx_buffer_paquet[2], 256);
+	uint8_t local_data[254];
+	memcpy(local_data, (const void *)&rx_buffer_paquet[2], 254);
 
-	uint16_t crc_calc = RFM69_RAW_CRC16_Calculation_Buffer(local_data, 256);
+	uint16_t crc_calc = RFM69_RAW_CRC16_Calculation_Buffer(local_data, 254);
 
 	if (crc_calc == crc_rx)
 	{
@@ -875,47 +852,113 @@ uint8_t RFM69_CRC_Check(uint16_t crc_rx, const volatile uint8_t rx_buffer_paquet
 	}
 }
 
-uint8_t RFM69_RAW_DATATYPE(const volatile uint8_t rx_buffer_paquet[])
-{
-	uint8_t type = rx_buffer_paquet[1];
-	switch (type)
-	{
-	    case 0x00:
-	    	return 0;
-	        break;
-
-	    case 0x01:
-	    	return 1;
-	        break;
-	    case 0x02:
-	    	return 2;
-	        break;
-	    default:
-	    	return 0;
-	        break;
-	}
-}
-
 /*
- * Show DATA in Function Of DataType
+ * PayLoad Print :
  */
-void RFM69_RAW_SHOW_DATA(uint8_t DataType,uint16_t rx_longueur_paquet,const volatile uint8_t rx_buffer_paquet[])
-{
-	  if(DataType == 2)
-	  {
-		  char message[256];
-		  uint8_t idx = 0;
-		  for (int i = 2; i < rx_longueur_paquet - 3; i++)
-		  {
-			  uint8_t c = rx_buffer_paquet[i];
-			  if (c == 0x00)
-				  break;
-			  message[idx++] = (char)c;
-		  }
-		  message[idx] = '\0';
 
-		  RFM69_printf(M, "[DATA TEXT]", "%s\r\n", message);
-	  }
+void GET_DASHBOARD(const volatile TrameAX *trame)
+{
+
+	RFM69_REFRESH_SCREEN();
+	RFM69_printfs("========================== RADIO MONITORING ==========================\r\n");
+	RFM69_printf(C, "[STATUS]", "En attente de paquets AX.25...\r\n");
+	RFM69_printfs("======================================================================\r\n");
+	RFM69_getConfigData();
+	RFM69_printfs("======================================================================\r\n");
+
+
+    if (trame == NULL) {
+    	RFM69_printf(R, "X_Radio_Show_TrameAX", "NULL\r\n");
+        return;
+    }
+    RFM69_printf(C, "\r\n[Payload AX.25 :", "\r\n");
+
+    if( trame->flag_start == 0x7E)
+    {
+    	RFM69_printf(G, "[FLAG START]", "0x%02X\r\n", trame->flag_start);
+    }else{
+    	RFM69_printf(R, "[FLAG START]", "0x%02X\r\n", trame->flag_start);
+    }
+
+    RFM69_printf(W, "[ADRESSE   ]", "");
+    for(int i = 0; i < 14; i++) {
+        uint8_t c = trame->adresse[i];
+        if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '-' || c == ' ') {
+            RFM69_printfs("%c", c);
+        } else {
+        	RFM69_printfs("[%02X]", c);
+        }
+    }
+    RFM69_printfs("\r\n");
+    RFM69_printf(J, "[CONTROL   ]", "0x%02X\r\n", trame->payload.control);
+    RFM69_printf(W, "[TYPE DATA ]", "0x%02X", trame->payload.Type_Data);
+
+    switch(trame->payload.Type_Data) {
+        case 0x01: RFM69_printfs("  ( COMMAND )\r\n"); break;
+        case 0x02: RFM69_printfs("  (   TEXT  )\r\n"); break;
+        default:   RFM69_printfs("  (UNDEFINED)\r\n"); break;
+    }
+
+    RFM69_printf(W, "[DATA      ]", "\r\n");
+
+    for (int i = 0; i < 254; i += 16)
+    {
+    	RFM69_printfs("Line %3d : ", i);
+
+        for (int j = 0; j < 16; j++)
+        {
+            if (i + j < 254) {
+            	RFM69_printfs("%02X ", trame->payload.data[i + j]);
+            } else {
+            	RFM69_printfs("   ");
+            }
+        }
+
+        RFM69_printfs(" | ");
+
+        for (int j = 0; j < 16; j++)
+        {
+            if (i + j < 254) {
+                uint8_t c = trame->payload.data[i + j];
+                if (c >= 32 && c <= 126) {
+                	RFM69_printfs("%c", c);
+                } else {
+                	RFM69_printfs(".");
+                }
+            }
+
+        }
+        RFM69_printfs(" | ");
+        RFM69_printfs("\r\n");
+    }
+
+    RFM69_printfs("-----------------------------------------------------------\r\n");
+    RFM69_printf(W, "[CRC      ]", "0x%04X\r\n", ((trame->fcs & 0x00FF) << 8) | ((trame->fcs & 0xFF00) >> 8));
+    if( trame->flag_end == 0x7E)
+    {
+    	RFM69_printf(G, "[FLAG END]", "0x%02X\r\n", trame->flag_end);
+    }else{
+    	RFM69_printf(R, "[FLAG END]", "0x%02X\r\n", trame->flag_end);
+    }
+    RFM69_printf(C, "Payload AX.25]", "\r\n");
 }
 
+void CRC_CHECK(const TrameAX *trame)
+{
+    if (trame == NULL) {
+    	RFM69_printf(R, "CRC_CHECK", "NULL\r\n");
+        return;
+    }
 
+    uint16_t crc_received = ((trame->fcs & 0x00FF) << 8) | ((trame->fcs & 0xFF00) >> 8);
+    uint16_t crc_calculated = RFM69_RAW_CRC16_Calculation_Buffer((const uint8_t *)trame->payload.data, 254);
+
+    if (crc_calculated == crc_received)
+    {
+    	RFM69_printf(G, "[GOOD CRC  ]", "0x%02X\r\n", crc_calculated);
+    }
+    else
+    {
+		RFM69_printf(R, "[BAD CRC   ]", "0x%02X\r\n", crc_calculated);
+    }
+}
