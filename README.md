@@ -21,15 +21,15 @@ To help you understand or modify the project, the documentation has been split i
 
 ### 🔧 Core API 
 
-- `RFM69_WriteReg` → Write a register value
+- `RFM69_WriteReg` → Write a value in a register
 - `RFM69_ReadReg` → Read a register value
 
 <details>
 <summary> Full reference </summary>
 
 | Core API | Description | Example |
-| :--- | :---: | :--- | 
-|  ` RFM69_WriteReg ` | Write a value in a register |  ```RFM69_WriteReg(0x37, 0x90);``` | 
+| :--- | :--- | :--- | 
+|  `RFM69_WriteReg ` | Write a value in a register |  ```RFM69_WriteReg(0x37, 0x90);``` | 
 |  `RFM69_ReadReg ` | Read a value in a register |  ```uint8_t currentVal = RFM69_ReadReg(0x02);``` | 
 
 </details>
@@ -39,57 +39,84 @@ To help you understand or modify the project, the documentation has been split i
 - `RFM69_Init` → Initialize SPI interface and Chip Select pin
 - `RFM69_SetMode` → Select operating mode type
 - `RFM69_GetMode` → Get operating mode
-- `RFM69_SetKeyValues_Sync` → Set Key to link two modules.
 
 <details>
 <summary> Full reference </summary>
 
 | Radio Initialization| Description | Example/Available Modes |
-| :--- | :---: | :--- |
+| :--- | :--- | :--- |
 | `RFM69_Init` | Initialize SPI interface and Chip Select pin | ```RFM69_Init(&hspi1, GPIOC, GPIO_PIN_7);``` |
-| `RFM69_SetMode` | Select operating mode type  |`RFM69_MODE_SLEEP`<br> `RFM69_MODE_FREQUENCYSYNTHER`  <br> `RFM69_MODE_STDBY` <br> `RFM69_MODE_RX` <br> `RFM69_MODE_TX` |
-| `RFM69_GetMode` | Get operating mode  | |
-| `RFM69_SetKeyValues_Sync` | Set Key to link two modules. <br> **Must be identical on both modules**  <br> ***Max key length 8***  |  ```uint8_t mykey[] = {0x42, 0x24};``` <br> ```RFM69_SetSyncValues(mykey, 2);``` |
+| `RFM69_SetMode` | Select operating mode type  |`RFM69_MODE_SLEEP`<br> `RFM69_MODE_STDBY`  <br> `RFM69_MODE_FS` <br> `RFM69_MODE_TX` <br> `RFM69_MODE_RX` |
+| `RFM69_GetMode` | Get operating mode  | Return `RFM69_Mode_t` :<br>  `RFM69_MODE_SLEEP`<br> `RFM69_MODE_STDBY`  <br> `RFM69_MODE_FS` <br> `RFM69_MODE_TX` <br> `RFM69_MODE_RX` |
 
 </details>
 
 ### 📡 Radio Configuration
 
 - `RFM69_SetFrequencyTo433` → Set Frequency to 433 MHz
-- `RFM69_SetBitrate` → Set bitrate of communication : 4.8 kbps = 4800
-- `RFM69_AutoSetFdev` → Automatically adjusts frequency deviation based on bitrate
+- `RFM69_SetBitrate` → Set bitrate of communication
+- `RFM69_GetBitrate` → Get bitrate of communication
+- `RFM69_AutoSetFdev` → Automatically adjusts frequency deviation based on bitrate for FSK Modulation
+- `RFM69_GetFdev` → Get frequency deviation based on bitrate with FSK Modulation
+- `RFM69_SetModulationType` → Set modulation type
+- `RFM69_GetModulationType` → Get modulation type
+- `RFM69_SetDataProcessingMode` → Set Data Processing type
+- `RFM69_GetDataProcessingMode` → Get Data Processing type
+- `RFM69_SetDataShaping` → Set Data Shaping type
+- `RFM69_GetDataShaping` → Get Data Shaping type
 
 <details>
 <summary> Full reference </summary>
 
 | Radio Configuration | Description | Example/Available Modes |
-| :--- | :---: | :--- |
+| :--- | :--- | :--- |
 | `RFM69_SetFrequencyTo433` | Set Frequency to 433 MHz  |  |
 | `RFM69_SetBitrate` | Set bitrate of communication : <br> 4.8 kbps = 4800 | ```RFM69_SetBitrate(4800);```  |
-| `RFM69_AutoSetFdev` | Automatically adjusts frequency deviation based on bitrate  |```RFM69_AutoSetFdev();``` |
+| `RFM69_GetBitrate` | Get bitrate of communication | ```uint32_t Bitrate = RFM69_GetBitrate();```  |
+| `RFM69_AutoSetFdev` | Automatically adjusts frequency deviation based on bitrate for FSK Modulation |```RFM69_AutoSetFdev();``` |
+| `RFM69_GetFdev` | Get frequency deviation based on bitrate  |```uint32_t Fdev = RFM69_GetFdev();``` |
+| `RFM69_SetModulationType` | Set Modulation type  |`RFM69_MODUL_FSK`<br> `RFM69_MODUL_OOK`  |
+| `RFM69_GetModulationType` | Get Modulation type  |`RFM69_Modulation_t RFM69_GetModulationType(void)`  |
+| `RFM69_SetDataProcessingMode` | Select Data Processing type  |`RFM69_PACKET_MODE`<br> `RFM69_CONTINUOUS_SYNC`  <br> `RFM69_CONTINUOUS_RAW` |
+| `RFM69_GetDataProcessingMode` | Get Data Processing type  | RFM69_DataProcessingMode_t RFM69_GetDataProcessingMode(void) |
+| `RFM69_SetDataShaping` | Select Data Shaping type  |`RFM69_SHAPING_NONE`<br> `RFM69_SHAPING_Gaussianfilter_BT1`<br> `RFM69_SHAPING_Gaussianfilter_BT05`<br> `RFM69_SHAPING_Gaussianfilter_BT03`  |
+| `RFM69_GetDataShaping` | Get Data Shaping type  | RFM69_Data_Shaping_t RFM69_GetDataShaping(void) |
 
 </details>
 
-### 📶 Modulation & Packet Engine
+### 📶 Packet Engine Configuration
 
-- `RFM69_SetModulationType` → Select modulation type
-- `RFM69_SetDataProcessingMode` → Select Data Processing type
-- `RFM69_SetDataShaping` → Select Data Shaping type
+- `RFM69_SetKeyValues_Sync` → Set Key to link two modules.
 - `RFM69_SetPacketConfig` → Select Packet Configuration
-- `RFM69_SetDefaultDioMapping` → Set DIO Mapping Default (Important if you use RAW Mode)
 
 <details>
 <summary> Full reference </summary>
 
 | Modulation & Packet Engine | Description | Example/Available Modes |
 | :--- | :---: | :--- |
-| `RFM69_SetModulationType` | Select Modulation type  |`RFM69_MODUL_FSK`<br> `RFM69_MODUL_OOK`  |
-| `RFM69_SetDataProcessingMode` | Select Data Processing type  |`RFM69_PACKET_MODE`<br> `RFM69_CONTINUOUS_SYNC`  <br> `RFM69_CONTINUOUS_RAW` |
-| `RFM69_SetDataShaping` | Select Data Shaping type  |`RFM69_SHAPING_NONE`<br> `RFM69_SHAPING_Gaussianfilter_BT1`<br> `RFM69_SHAPING_Gaussianfilter_BT05`<br> `RFM69_SHAPING_Gaussianfilter_BT03`  |
+| `RFM69_SetKeyValues_Sync` | Set Key to link two modules. <br> **Must be identical on both modules**  <br> ***Max key length 8***  |  ```uint8_t mykey[] = {0x42, 0x24};``` <br> ```RFM69_SetSyncValues(mykey, 2);``` |
 | `RFM69_SetPacketConfig` | Select Packet Configuration  |`RFM69_PACKET_FORMAT_FIXED`<br> `RFM69_PACKET__FORMAT_VARIABLE`<br> `RFM69_DC_FREE_NONE`<br> `RFM69_DC_FREE_MANCHESTER`<br> `RFM69_DC_FREE_WHITENING`<br> `RFM69_CRC_OFF`<br> `RFM69_CRC_ON`<br> `RFM69_CRC_AUTOCLEAR_ON`<br> `RFM69_CRC_AUTOCLEAR_OFF`<br> `RFM69_FILTER_NONE`<br> `RFM69_FILTER_NODE`<br> `RFM69_FILTER_NODE_BROADCAST`  |
-| `RFM69_SetDefaultDioMapping` | Set DIO Mapping Default (Important if you use RAW Mode) | By default DIO1 is DCLK (Clock) |
 
 </details>
+
+### 📶 RAW Mode Configuration
+
+- `` → 
+- `` → 
+
+<details>
+<summary> Full reference </summary>
+
+| Function| Description | Example/Available Modes |
+| :--- | :---: | :--- |
+
+</details>
+
+
+
+
+
+
 
 ### 📤 Transmission
 
@@ -190,6 +217,7 @@ To help you understand or modify the project, the documentation has been split i
 
 ### 📥 RAW Mode
 
+- `RFM69_SetDefaultDioMapping` → Set DIO Mapping Default (Important if you use RAW Mode)
 - `RFM69_Text_To_Binary_Payload` → Transform Text to Binary format before sending 
 - `RFM69_RAW_FillUp_Playload` → Fill Up Playload before sending
 - `RFM69_RAW_DATA_SEND` → Automatic Send Message in RAW Mode
@@ -204,6 +232,7 @@ To help you understand or modify the project, the documentation has been split i
 
 | Reception | Description | Example/Available Modes |
 | :--- | :---: | :--- |
+| `RFM69_SetDefaultDioMapping` | Set DIO Mapping Default (Important if you use RAW Mode) | By default DIO1 is DCLK (Clock) |
 | `RFM69_RAW_FillUp_Playload` | Fill Up Playload before sending  | |
 | `RFM69_Text_To_Binary_Payload` | Transform Text to Binary format before sending  |  |
 | `RFM69_RAW_DATA_SEND` | Automatic Send Message in RAW Mode  | |
