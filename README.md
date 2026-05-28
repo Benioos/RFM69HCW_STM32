@@ -155,7 +155,7 @@ To help you understand or modify the project, the documentation has been split i
 
 </details>
 
-### 📥 Reception
+### 📥 Reception Parameters
 
 - `RFM69_RSSI` → Visualize RSSI in dBm
 - `RFM69_SetLnaImpedance` → Set LNA Impedance (Z) In
@@ -170,7 +170,7 @@ To help you understand or modify the project, the documentation has been split i
 - `RFM69_StartFEI` → Start Measurement Of Error Frequency in Hz FEI
 - `RFM69_Status_ReadingErrorFrequency` → Get Status of the Reading Error Frequency FEI
 - `RFM69_GetFrequencyErrorFeiHz` → Read Error Frequency in Hz FEI
-- 
+  
 <details>
 <summary> Full reference </summary>
 
