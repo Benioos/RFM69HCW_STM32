@@ -2,7 +2,7 @@
 
 This is a C driver for the **RFM69HCW / SX1231** RF transceiver, designed for **STM32** microcontrollers using the **STM32 HAL** library.
 
-This library provides a way of controlling the radio module over SPI. **NEW FUNCTION COMING THIS WEEK**
+This library provides a way of controlling the radio module over SPI. 
 
 
 <img src="https://cdn-shop.adafruit.com/970x728/3070-07.jpg" alt="Adafruit RFM69HCW Transceiver Radio" width="260">
