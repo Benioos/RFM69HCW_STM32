@@ -86,7 +86,7 @@
  * You only need to comment or uncomment the line below
  */
 #define RFM69_DEBUG_ENABLED
-
+#define CLEAR_LINE       "\033[K"
 #define CLEAR_SCREEN    "\033[2J"
 #define CURSOR_HOME     "\033[H"
 #define HIDE_CURSOR     "\033[?25l"
@@ -197,9 +197,10 @@ void RFM69_WriteReg(uint8_t reg, uint8_t data);
 uint8_t RFM69_ReadReg(uint8_t reg);
 
 /*
- * Get information of Configuration
+ * PRINT CONFIG
  */
-void RFM69_getConfigData();
+void PRINT_ConfigData();
+
 
 /*
  * Set bitrate
@@ -438,7 +439,7 @@ void RFM69_RAW_DATA_SEND(const uint8_t *buffer, uint16_t size);
 /*
  * RAW Mode Transmit Byte
  */
-void RFM69_RAW_Transmit_Byte(uint8_t data);
+void RFM69_RAW_Transmit_Byte(uint8_t data, uint8_t enable_stuffing);
 
 /*
  * Print Bytes
@@ -458,12 +459,6 @@ uint8_t RFM69_WaitForTxReady(uint32_t timeout_ms);
 void RFM69_Pad_To_256(uint8_t *buffer, uint16_t len);
 
 /*
- * Verification CRC
- */
-uint8_t RFM69_CRC_Check(uint16_t crc_rx, const volatile uint8_t rx_buffer_paquet[]);
-
-
-/*
  * DashBoard
  */
 void GET_DASHBOARD(const volatile TrameAX *trame);
@@ -472,5 +467,17 @@ void GET_DASHBOARD(const volatile TrameAX *trame);
  * CRC Check DASHBOARD
  */
 void CRC_CHECK(const TrameAX *trame);
+
+
+/*
+ * Print Mode
+ */
+void PRINT_MODE(void);
+
+/*
+ * PRINT DATA TRAME
+ */
+void PRINT_Data_TRAME(const volatile TrameAX *trame);
+
 
 #endif /* INC_RFM69HCW_H_ */
