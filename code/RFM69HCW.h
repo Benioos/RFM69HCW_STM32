@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include  <string.h>
 #include <ctype.h>
-
+#define RFM69_GOTO_XY(l, c) printf("\033[%d;%dH", l, c)
 // Broche de données (DATA)
 #define RFM_DATA_PIN            GPIO_PIN_4
 #define RFM_DATA_PORT           GPIOB
@@ -22,11 +22,6 @@
 #define RFM_DCLK_PIN            GPIO_PIN_12
 #define RFM_DCLK_PORT           GPIOF
 #define RFM_DCLK_EXTI_IRQn      EXTI15_10_IRQn
-
-
-
-
-
 
 #define RegVersion 0x10 // Version code of the chips
 
@@ -92,6 +87,7 @@
 #define HIDE_CURSOR     "\033[?25l"
 #define SHOW_CURSOR     "\033[?25h"
 
+
 #ifdef RFM69_DEBUG_ENABLED
     #define RFM69_printf(color, prefix, ...) \
         printf(color prefix X __VA_ARGS__)
@@ -144,6 +140,8 @@ void RFM69_SetMode(RFM69_Mode_t mode);
  * Get Actual Mode
  */
 RFM69_Mode_t RFM69_GetMode(void);
+
+
 
 /*
  * Data Processing Mode
@@ -434,7 +432,7 @@ void RFM69_RAW_FillUp_Payload(TrameAX *trame,const uint8_t adresse[14],uint8_t  
 /*
   * RAW Mode SEND PAYLOAD
 */
-void RFM69_RAW_DATA_SEND(const uint8_t *buffer, uint16_t size);
+uint8_t RFM69_RAW_DATA_SEND(const uint8_t *buffer, uint16_t size);
 
 /*
  * RAW Mode Transmit Byte
@@ -461,8 +459,9 @@ void RFM69_Pad_To_256(uint8_t *buffer, uint16_t len);
 /*
  * DashBoard
  */
-void GET_DASHBOARD(const volatile TrameAX *trame);
+void GET_DASHBOARD(void);
 
+void GET_RECEIVE_DASHBOARD(const volatile TrameAX *trame);
 /*
  * CRC Check DASHBOARD
  */
@@ -478,6 +477,6 @@ void PRINT_MODE(void);
  * PRINT DATA TRAME
  */
 void PRINT_Data_TRAME(const volatile TrameAX *trame);
-
-
+void GET_TRANSMIT_DASHBOARD(const volatile TrameAX *trame);
+void GET_time_DASHBOARD(void);
 #endif /* INC_RFM69HCW_H_ */

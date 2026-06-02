@@ -481,8 +481,12 @@ void RFM69_SetDefaultDioMapping(void)
  */
 uint16_t RFM69_Text_To_Binary_Payload(const char *texte, uint8_t *payload)
 {
-	uint16_t len = (uint16_t) strlen(texte);
+	uint16_t len = (int16_t) strlen(texte);
     uint16_t limited_len = (len > 254) ? 254 : len;
+    if(len > 254)
+    {
+    	len = 0;
+    }
     memcpy(payload, texte, limited_len);
     return len;
 }
@@ -509,18 +513,18 @@ void RFM69_RAW_FillUp_Payload(TrameAX *trame, const uint8_t adresse[14], uint8_t
 /*
   * RAW MODE : SEND PAYLOAD
 */
-void RFM69_RAW_DATA_SEND(const uint8_t *buffer, uint16_t size)
+uint8_t RFM69_RAW_DATA_SEND(const uint8_t *buffer, uint16_t size)
 {
     RFM69_SetMode(RFM69_MODE_TX);
 
     if (RFM69_WaitForPLLLock(200) == 0)
     {
-        return;
+        return 0;
     }
 
     if (RFM69_WaitForTxReady(200)== 0)
     {
-        return;
+        return 0;
     }
 
     RFM69_RAW_Transmit_Byte(0, 2);
@@ -541,6 +545,7 @@ void RFM69_RAW_DATA_SEND(const uint8_t *buffer, uint16_t size)
     HAL_GPIO_WritePin(RFM_DATA_PORT, RFM_DATA_PIN, GPIO_PIN_RESET);
 
 	RFM69_Delay(200);
+	return 1;
 }
 
 /*
@@ -716,7 +721,6 @@ RFM69_PA_Select_t RFM69_GetPowerAmplifier(void)
 uint8_t RFM69_RSSI(void)
 {
 	uint8_t rssi = RFM69_ReadReg(RegRssiValue);
-	RFM69_printfs("\r\n Ambient Noise (RSSI): -%d dBm\r\n", rssi/2);
 	return rssi;
 }
 
@@ -751,14 +755,13 @@ void RFM69_GetLnaStatus(void)
     uint8_t real = (val & 0x38) >> 3; // Bits 5-3 (Effective gain)
     uint8_t set  = (val & 0x07);      // Bits 2-0 (Controlled gain)
 
-    RFM69_printfs("\r\n --- LNA Status ---\r\n");
-    RFM69_printfs("\r\n Impedance : %s\r\n", (zin == 0x80) ? "200 Ohms" : "50 Ohms");
+    RFM69_printfs("[Impedance] : %s\r\n", (zin == 0x80) ? "200 Ohms" : "50 Ohms");
 
-    if (set == 0) printf("\r\n Mode : AUTOMATIC (AGC)\r\n");
-    else          printf("\r\n Mode : MANUAL (G%d force)\r\n", set);
+    if (set == 0) printf("[LNA Mode] : AUTOMATIC (AGC)\r\n");
+    else          printf("[LNA Mode] : MANUAL (G%d force)\r\n", set);
 
-    RFM69_printfs("\r\n Current Gain : G%d\r\n", real);
-    RFM69_printfs("\r\n ------------------\r\n");
+    RFM69_printfs("[Current Gain] : G%d\r\n", real);
+
 }
 
 /*
@@ -903,41 +906,41 @@ void PRINT_ConfigData(void)
 
  	if(mode == RFM69_PACKET_MODE)
  	{
- 		RFM69_printfs("Mode : PACKET\r\n");
+ 		RFM69_printfs("[Mode] : PACKET\r\n");
  	}else if(mode == RFM69_CONTINUOUS_SYNC){
- 		RFM69_printfs("Mode : RAW SYNC\r\n");
+ 		RFM69_printfs("[Mode] : RAW SYNC\r\n");
  	}else if(mode == RFM69_CONTINUOUS_RAW){
- 		RFM69_printfs("Mode : RAW\r\n");
+ 		RFM69_printfs("[Mode] : RAW\r\n");
  	}
 
  	if(modulation == RFM69_MODUL_FSK)
  	{
- 		RFM69_printfs("Modulation : FSK\r\n");
+ 		RFM69_printfs("[Modulation] : FSK\r\n");
  	}else if(modulation == RFM69_MODUL_OOK){
- 		RFM69_printfs("Modulation : OOK\r\n");
+ 		RFM69_printfs("[Modulation] : OOK\r\n");
  	}
 
  	if(shaping == RFM69_SHAPING_NONE)
  	{
- 		RFM69_printfs("Shaping : None\r\n");
+ 		RFM69_printfs("[Shaping] : None\r\n");
  	}else if(shaping == RFM69_SHAPING_Gaussianfilter_BT1){
- 		RFM69_printfs("Shaping : Gaussian Filtre BT=1.0\r\n");
+ 		RFM69_printfs("[Shaping] : Gaussian Filtre BT=1.0\r\n");
  	}else if(shaping == RFM69_SHAPING_Gaussianfilter_BT05){
- 		RFM69_printfs("Shaping : Gaussian Filtre BT=0.5\r\n");
+ 		RFM69_printfs("[Shaping] : Gaussian Filtre BT=0.5\r\n");
  	}else if(shaping == RFM69_SHAPING_Gaussianfilter_BT03){
- 		RFM69_printfs("Shaping : Gaussian Filtre BT=0.3\r\n");
+ 		RFM69_printfs("[Shaping] : Gaussian Filtre BT=0.3\r\n");
  	}
 
      val = RFM69_ReadReg(0x01);
      uint8_t opMode = (val & 0x1C);
      if(opMode == RFM69_MODE_SLEEP) {
-     	RFM69_printfs("Operation Mode : SLEEP\r\n");
+     	RFM69_printfs("[Operation Mode] : SLEEP\r\n");
      } else if(opMode == RFM69_MODE_STDBY) {
-     	RFM69_printfs("Operation Mode : STANDBY\r\n");
+     	RFM69_printfs("[Operation Mode] : STANDBY\r\n");
      } else if(opMode == RFM69_MODE_TX) {
-     	RFM69_printfs("Operation Mode : TRANSMITTING\r\n");
+     	RFM69_printfs("[Operation Mode] : TRANSMITTING\r\n");
      } else if(opMode == RFM69_MODE_RX) {
-     	RFM69_printfs("Operation Mode : RECEIVEING\r\n");
+     	RFM69_printfs("[Operation Mode] : RECEIVEING\r\n");
      }
 
      uint8_t msb = RFM69_ReadReg(0x07);
@@ -947,13 +950,13 @@ void PRINT_ConfigData(void)
      uint64_t freqHz = ((uint64_t)frf * 6103515625ULL) / 100000000ULL;
      uint32_t mhz = (uint32_t)(freqHz / 1000000);
      uint32_t khz = (uint32_t)((freqHz % 1000000) / 1000);
-     RFM69_printfs("Frequency : %lu.%03lu MHz\r\n", (unsigned long)mhz, (unsigned long)khz);
+     RFM69_printfs("[Frequency] : %lu.%03lu MHz\r\n", (unsigned long)mhz, (unsigned long)khz);
 
      uint8_t msb_b = RFM69_ReadReg(0x03);
      uint8_t lsb_b = RFM69_ReadReg(0x04);
      uint16_t bitReg = (uint16_t)((msb_b << 8) | lsb_b);
      uint32_t currentBitrate = (bitReg == 0) ? 0 : (32000000 / bitReg);
-     RFM69_printfs("Bitrate    : %lu bps\r\n", (unsigned long)currentBitrate);
+     RFM69_printfs("[Bitrate] : %lu bps\r\n", (unsigned long)currentBitrate);
 
 
 }
@@ -1038,127 +1041,167 @@ void PRINT_MODE(void)
 }
 
 
+static void Display_AX25_Address(const volatile uint8_t *adresse)
+{
+    RFM69_printf(W, "[ADRESSE   ]", "");
+    for (int i = 0; i < 14; i++) {
+        uint8_t c = adresse[i];
+        if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '-' || c == ' ') {
+            RFM69_printfs("%c", c);
+        } else {
+            RFM69_printfs("[%02X]", c);
+        }
+    }
+    RFM69_printfs("\r\n");
+}
 
 
 /*
  * PayLoad Print :
- */void GET_DASHBOARD(const volatile TrameAX *trame)
- {
- 	RFM69_REFRESH_SCREEN();
- 	RFM69_printfs("\033[36m===================================== RADIO MONITORING =====================================\033[0m\r\n");
+ */
+void GET_DASHBOARD(void)
+{
+	RFM69_REFRESH_SCREEN();
+	RFM69_printfs(C "===================================== RADIO MONITORING =====================================" W "\r\n");
+	RFM69_Mode_t currentMode = RFM69_GetMode();
+    switch (currentMode) {
+        case RFM69_MODE_SLEEP: RFM69_printf(B, "[STATUS] ", "SLEEP    "); break;
+        case RFM69_MODE_STDBY: RFM69_printf(W, "[STATUS] ", "STANDBY  "); break;
+        case RFM69_MODE_FS:    RFM69_printf(M, "[STATUS] ", "FS       "); break;
+        case RFM69_MODE_TX:    RFM69_printf(R, "[STATUS] ", "TX       "); break;
+        case RFM69_MODE_RX:    RFM69_printf(C, "[STATUS] ", "RX       "); break;
+        default:               RFM69_printf(J, "[STATUS] ", "UNDEFINED"); break;
+    }
+    RFM69_printfs(C "\r\n============================================================================================" W "\r\n");
+    PRINT_ConfigData();
+    uint32_t Fdev = RFM69_GetFdev();
+    RFM69_printf(W, "[Frequency Deviation]", "%ld Hz\r\n", Fdev);
+    RFM69_GetLnaStatus();
+    int32_t AFC_Correction = RFM69_GetAFCCorrectionHz();
+    RFM69_printf(W, "[AFC Correction]", "%ld Hz\r\n", AFC_Correction);
+    RFM69_printfs(C "==================================== END RADIO MONITORING ===================================" W "\r\n");
 
- 	RFM69_Mode_t currentMode = RFM69_GetMode();
- 	switch (currentMode) {
- 	        case RFM69_MODE_SLEEP:
- 	            RFM69_printf(B, "[STATUS] ", "Module en veille (Sleep)...");
- 	            break;
-
- 	        case RFM69_MODE_STDBY:
- 	            RFM69_printf(W, "[STATUS] ", "Mode Standby (Prêt).");
- 	            break;
-
- 	        case RFM69_MODE_FS:
- 	            RFM69_printf(M, "[STATUS] ", "Synthétiseur de fréquence actif (FS)...");
- 	            break;
-
- 	        case RFM69_MODE_TX:
- 	            RFM69_printf(R, "[STATUS] ", "Transmission en cours (TX)...");
- 	            break;
-
- 	        case RFM69_MODE_RX:
- 	            RFM69_printf(C, "[STATUS] ", "En attente de paquets AX.25 (RX)...");
- 	            break;
-
- 	        default:
- 	            RFM69_printf(J, "[STATUS] ", "Mode inconnu ou non défini.");
- 	            break;
- 	    }
-
- 	RFM69_printfs("\033[36m\r\n============================================================================================\033[0m\r\n");
- 	PRINT_ConfigData();
- 	RFM69_printfs("\033[36m============================================================================================\033[0m\r\n");
-
- 	if (currentMode == RFM69_MODE_RX) {
- 		RFM69_printfs("\033[36m[RX METRICS]\033[0m\r\n");
-
- 		RFM69_printfs("\033[36m============================================================================================\033[0m\r\n");
-
- 		if (trame == NULL) {
- 			RFM69_printf(R, "X_Radio_Show_TrameAX", "NULL\r\n");
- 		} else {
- 			RFM69_printfs("\033[36m[Payload AX.25]\033[0m\r\n\r\n");
-
- 			if( trame->flag_start == 0x7E)
- 			{
- 				RFM69_printf(G, "[FLAG START]", "0x%02X\r\n", trame->flag_start);
- 			}else{
- 				RFM69_printf(R, "[FLAG START]", "0x%02X\r\n", trame->flag_start);
- 			}
-
- 			RFM69_printf(W, "[ADRESSE   ]", "");
- 			for(int i = 0; i < 14; i++) {
- 				uint8_t c = trame->adresse[i];
- 				if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '-' || c == ' ') {
- 					RFM69_printfs("%c", c);
- 				} else {
- 					RFM69_printfs("[%02X]", c);
- 				}
- 			}
- 			RFM69_printfs("\r\n");
- 			RFM69_printf(W, "[CONTROL   ]", "0x%02X\r\n", trame->payload.control);
- 			RFM69_printf(W, "[TYPE DATA ]", "0x%02X", trame->payload.Type_Data);
-
- 			switch(trame->payload.Type_Data) {
- 				case 0x01: RFM69_printfs("  ( COMMAND )\r\n"); break;
- 				case 0x02: RFM69_printfs("  (   TEXT  )\r\n"); break;
- 				default:   RFM69_printfs("  (UNDEFINED)\r\n"); break;
- 			}
-
- 			for (int i = 0; i < 254; i += 16)
- 			{
- 				RFM69_printfs("Line %3d : ", i);
-
- 				for (int j = 0; j < 16; j++)
- 				{
- 					if (i + j < 254) {
- 						RFM69_printfs("%02X ", trame->payload.data[i + j]);
- 					} else {
- 						RFM69_printfs("   ");
- 					}
- 				}
-
- 				RFM69_printfs(" | ");
-
- 				for (int j = 0; j < 16; j++)
- 				{
- 					if (i + j < 254) {
- 						uint8_t c = trame->payload.data[i + j];
- 						if (c >= 32 && c <= 126) {
- 							RFM69_printfs("%c", c);
- 						} else {
- 							RFM69_printfs(".");
- 						}
- 					}
- 				}
- 				RFM69_printfs(" | ");
- 				RFM69_printfs("\r\n");
- 			}
-
- 			RFM69_printf(W, "[CRC      ]", "0x%04X\r\n", ((trame->fcs & 0x00FF) << 8) | ((trame->fcs & 0xFF00) >> 8));
- 			if( trame->flag_end == 0x7E)
- 			{
- 				RFM69_printf(G, "[FLAG END]", "0x%02X\r\n", trame->flag_end);
- 			}else{
- 				RFM69_printf(R, "[FLAG END]", "0x%02X\r\n", trame->flag_end);
- 			}
- 			CRC_CHECK((const TrameAX *)trame);
- 			RFM69_printfs("\033[36m[Payload AX.25]\033[0m\r\n");
- 			RFM69_printfs("-----------------------------------------------------------\r\n");
- 			RFM69_printfs("\033[36m[RSSI]\033[0m");
- 			uint8_t rssi = RFM69_RSSI();
+}
 
 
- 		}
- 	}
- }
+void GET_RECEIVE_DASHBOARD(const volatile TrameAX *trame)
+{
+	RFM69_GOTO_XY(18, 1);
+	RFM69_printfs(C "\r\n============================================================================================" W "\r\n");
+    if (trame == NULL) {
+        RFM69_printf(R, "GET_RX_DASHBOARD", " Pointer NULL\r\n");
+        return;
+    }else{
+    	RFM69_printf(G, "GET_RX_DASHBOARD", " Pointer OK\r\n");
+    }
+    RFM69_printfs(C "\r\n============================================================================================" W "\r\n");
+    RFM69_printf((trame->flag_start == 0x7E) ? G : R, "[FLAG START]", "0x%02X\r\n", trame->flag_start);
+    Display_AX25_Address(trame->adresse);
+    RFM69_printf(W, "[CONTROL   ]", "0x%02X\r\n", trame->payload.control);
+    RFM69_printf(W, "[TYPE DATA ]", "0x%02X", trame->payload.Type_Data);
+    switch(trame->payload.Type_Data) {
+        case 0x01: RFM69_printfs("  ( COMMAND )\r\n"); break;
+        case 0x02: RFM69_printfs("  (   TEXT  )\r\n"); break;
+        default:   RFM69_printfs("  (UNDEFINED)\r\n"); break;
+    }
 
+    uint16_t fcs_swapped = ((trame->fcs & 0x00FF) << 8) | ((trame->fcs & 0xFF00) >> 8);
+    RFM69_printf(W, "[CRC      ]", "0x%04X\r\n", fcs_swapped);
+
+    RFM69_printf((trame->flag_end == 0x7E) ? G : R, "[FLAG END]", "0x%02X\r\n", trame->flag_end);
+
+    CRC_CHECK((const TrameAX *)trame);
+
+    RFM69_printfs(C "\r\n============================================================================================" W "\r\n");
+    RFM69_printf(W, "[DATA]", "\r\n");
+    for (int i = 0; i < 254; i++) {
+        uint8_t c = ((uint8_t*)trame->payload.data)[i];
+        RFM69_printfs("%c", (c >= 32 && c <= 126) ? c : '.');
+    }
+    RFM69_printfs("\r\n");
+    RFM69_printfs(C "\r\n============================================================================================" W "\r\n");
+
+}
+
+
+void GET_TRANSMIT_DASHBOARD(const volatile TrameAX *trame)
+{
+	RFM69_GOTO_XY(18, 1);
+	RFM69_printfs(C "\r\n============================================================================================" W "\r\n");
+    if (trame == NULL) {
+        RFM69_printf(R, "GET_TX_DASHBOARD", " Pointer NULL\r\n");
+        return;
+    }else{
+    	RFM69_printf(G, "GET_TX_DASHBOARD", " Pointer OK\r\n");
+    }
+    RFM69_printfs(C "\r\n============================================================================================" W "\r\n");
+    RFM69_printf((trame->flag_start == 0x7E) ? G : R, "[FLAG START]", "0x%02X\r\n", trame->flag_start);
+    Display_AX25_Address(trame->adresse);
+    RFM69_printf(W, "[CONTROL   ]", "0x%02X\r\n", trame->payload.control);
+    RFM69_printf(W, "[TYPE DATA ]", "0x%02X", trame->payload.Type_Data);
+    switch(trame->payload.Type_Data) {
+        case 0x01: RFM69_printfs("  ( COMMAND )\r\n"); break;
+        case 0x02: RFM69_printfs("  (   TEXT  )\r\n"); break;
+        default:   RFM69_printfs("  (UNDEFINED)\r\n"); break;
+    }
+
+    uint16_t fcs_swapped = ((trame->fcs & 0x00FF) << 8) | ((trame->fcs & 0xFF00) >> 8);
+    RFM69_printf(W, "[CRC      ]", "0x%04X\r\n", fcs_swapped);
+
+    RFM69_printf((trame->flag_end == 0x7E) ? G : R, "[FLAG END]", "0x%02X\r\n", trame->flag_end);
+
+    CRC_CHECK((const TrameAX *)trame);
+    RFM69_PA_Select_t mode = RFM69_GetPowerAmplifier();
+	switch (mode) {
+		case PA_0:
+			printf("[Power Amplifier] : PA_0 (OUT RFIO)");
+			break;
+		case PA_1:
+			printf("[Power Amplifier] : PA_1 (OUT ANT)");
+			break;
+		case PA_1_2:
+			printf("[Power Amplifier] : PA_1_2 (OUT ANT POWER)");
+			break;
+		case PA_HIGH_POWER:
+			printf("[Power Amplifier] : PA_HIGH_POWER (OUT BOOST)");
+			break;
+	}
+    RFM69_printfs(C "\r\n============================================================================================" W "\r\n");
+    RFM69_printf(W, "[DATA]", "\r\n");
+    for (int i = 0; i < 254; i++) {
+        uint8_t c = ((uint8_t*)trame->payload.data)[i];
+        RFM69_printfs("%c", (c >= 32 && c <= 126) ? c : '.');
+    }
+    RFM69_printfs("\r\n");
+    RFM69_printfs(C "\r\n============================================================================================" W "\r\n");
+
+}
+
+
+static uint8_t rssi_min_brut = 0;   // 0 est la valeur de départ pour le pire signal possible
+static uint8_t rssi_max_brut = 255; // 255 est la valeur de départ pour le meilleur signal possible
+static int premier_calcul = 1;      // Flag pour initialiser au premier démarrage
+void GET_time_DASHBOARD(void)
+{
+    RFM69_GOTO_XY(45, 1);
+    RFM69_printfs(C "===================================== REAL TIME MONITORING ==================================" W "\r\n");
+    uint8_t rssi_actuel = RFM69_RSSI();
+    if (premier_calcul) {
+        rssi_min_brut = rssi_actuel;
+        rssi_max_brut = rssi_actuel;
+        premier_calcul = 0;
+    }
+
+    if (rssi_actuel > rssi_min_brut) {
+        rssi_min_brut = rssi_actuel;
+    }
+    if (rssi_actuel < rssi_max_brut) {
+        rssi_max_brut = rssi_actuel;
+    }
+    RFM69_printfs(W "[RSSI] : -%d dBm  |  " G "Max : -%d dBm" W "  |  " R "Min : -%d dBm" W CLEAR_LINE "\r\n",
+                  rssi_actuel / 2,
+                  rssi_max_brut / 2,
+                  rssi_min_brut / 2);
+
+    RFM69_printfs(C "============================================================================================" W "\r\n");
+}
