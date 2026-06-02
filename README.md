@@ -209,8 +209,10 @@ The SPI was configured as follows:
 * [Adafruit Learning Guide](https://learn.adafruit.com/adafruit-rfm69hcw-and-rfm96-rfm95-rfm98-lora-packet-padio-breakouts/downloads)
 
 ## 📄 License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+This project is licensed under the Mozilla Public License 2.0 (MPL-2.0).
+
+See the LICENSE file for details.
 ---
 
 ### Note
