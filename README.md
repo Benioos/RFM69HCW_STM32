@@ -212,9 +212,6 @@ The SPI was configured as follows:
 
 This project is licensed under the Mozilla Public License 2.0 (MPL-2.0).
 
-See the LICENSE file for details.
----
-
 ### Note
 
 To use the `printf` debug feature on STM32, make sure you have redirected `stdout` to your UART peripheral (by overriding the `_write` function).
