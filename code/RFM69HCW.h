@@ -1,9 +1,16 @@
-/*
- * RFM69HCW.h
+/******************************************************************************
+ * @file    RFM69HCW.h
+ * @author  Benjamin
+ * @brief   RFM69HCW driver for STM32
  *
- *  Created on: May 6, 2026
- *      Author: benja
- */
+ * Copyright (c) 2026 Benjamin
+ *
+ * This Source Code Form is subject to the terms of the
+ * Mozilla Public License, v. 2.0.
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * See LICENSE file in the project root for full license information.
+ ******************************************************************************/
 
 #ifndef INC_RFM69HCW_H_
 #define INC_RFM69HCW_H_
