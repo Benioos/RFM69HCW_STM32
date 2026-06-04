@@ -14,8 +14,8 @@
 
 #include "RFM69HCW.h"
 
-static SPI_HandleTypeDef *rfm69_hspi;
-static GPIO_TypeDef *rfm69_cs_port;
+static void *rfm69_hspi;
+static void *rfm69_cs_port;
 static uint16_t rfm69_cs_pin;
 
 /*
@@ -59,13 +59,15 @@ uint8_t RFM69_ReadReg(uint8_t reg)
 /*
  * Init SPI Pin and CS pin
  */
-void RFM69_Init(SPI_HandleTypeDef *hspi, GPIO_TypeDef *CS_Port, uint16_t CS_Pin)
+void RFM69_Init(void *hspi, void *CS_Port, uint16_t CS_Pin)
 {
     rfm69_hspi = hspi;
     rfm69_cs_port = CS_Port;
     rfm69_cs_pin = CS_Pin;
 
-    HAL_GPIO_WritePin(rfm69_cs_port, rfm69_cs_pin, GPIO_PIN_SET);
+    MCAL_RFM69H_INIT();
+
+    MCAL_RFM69H_CS_DESELECT(rfm69_cs_port, rfm69_cs_pin);
 }
 
 /*
@@ -76,7 +78,7 @@ void RFM69_SetMode(RFM69_Mode_t mode)
     RFM69_WriteReg(RegOpMode, (uint8_t)mode);
 
     if (mode != RFM69_MODE_SLEEP) {
-        HAL_Delay(1);
+    	MCAL_RFM69H_DELAY_MS(1);
     }
 }
 
@@ -282,11 +284,11 @@ RFM69_Data_Shaping_t RFM69_GetDataShaping(void)
  */
 uint8_t RFM69_WaitForPLLLock(uint32_t timeout_ms)
 {
-    uint32_t tick = HAL_GetTick();
+    uint32_t tick = MCAL_RFM69H_GET_TICK();
 
     while (!(RFM69_ReadReg(RegIrqFlagsPLL) & PLLock))
     {
-        if ((HAL_GetTick() - tick) > timeout_ms)
+        if ((MCAL_RFM69H_GET_TICK() - tick) > timeout_ms)
         {
             RFM69_printf(R, "!ERROR", "PLL never locked\r\n");
             RFM69_printf(R, "!ABORD", "\r\n");
@@ -305,11 +307,11 @@ uint8_t RFM69_WaitForPLLLock(uint32_t timeout_ms)
  */
 uint8_t RFM69_WaitForTxReady(uint32_t timeout_ms)
 {
-    uint32_t tick = HAL_GetTick();
+    uint32_t tick = MCAL_RFM69H_GET_TICK();
 
     while (!(RFM69_ReadReg(RegIrqFlags1) & TxReady))
     {
-        if ((HAL_GetTick() - tick) > timeout_ms)
+        if ((MCAL_RFM69H_GET_TICK() - tick) > timeout_ms)
         {
             RFM69_printf(R, "!ERROR", "TX Not Ready\r\n");
             RFM69_printf(R, "!ABORD", "\r\n");
@@ -393,9 +395,9 @@ void RFM69_SendMessage_Packet_Mode(uint8_t* payload, uint8_t len)
 
     RFM69_SetMode(RFM69_MODE_FS);
 
-    uint32_t tick = HAL_GetTick();
+    uint32_t tick = MCAL_RFM69H_GET_TICK();
     while (!(RFM69_ReadReg(RegIrqFlagsPLL) & PLLock)) {
-        if ((HAL_GetTick() - tick) > 200)
+        if ((MCAL_RFM69H_GET_TICK() - tick) > 200)
 		{
         	RFM69_printf(R, "!ERROR_SEND", "PLL never locked\r\n");
         	RFM69_printf(R, "!ABORD", "\r\n");
@@ -406,9 +408,9 @@ void RFM69_SendMessage_Packet_Mode(uint8_t* payload, uint8_t len)
 
     RFM69_SetMode(RFM69_MODE_TX);
 
-    tick = HAL_GetTick();
+    tick = MCAL_RFM69H_GET_TICK();
     while (!(RFM69_ReadReg(RegIrqFlagsPLL) & 0x80)) {
-        if ((HAL_GetTick() - tick) > 20) {
+        if ((MCAL_RFM69H_GET_TICK() - tick) > 20) {
         	RFM69_printf(R, "!ERROR_SEND", "Mode TX not Ready\r\n");
         	RFM69_printf(R, "!ABORD", "\r\n");
         	RFM69_SetMode(RFM69_MODE_STDBY);
@@ -416,9 +418,9 @@ void RFM69_SendMessage_Packet_Mode(uint8_t* payload, uint8_t len)
         }
     }
 
-    tick = HAL_GetTick();
+    tick = MCAL_RFM69H_GET_TICK();
     while (!(RFM69_ReadReg(RegIrqFlagsFIFO) & PacketSend)) {
-        if ((HAL_GetTick() - tick) > TimeoutPacketNotSend) {
+        if ((MCAL_RFM69H_GET_TICK() - tick) > TimeoutPacketNotSend) {
 
         	RFM69_printf(R, "!ERROR_SEND", "Packet Send Control down 0.\r\n");
         	RFM69_printf(R, "!ABORD", "\r\n");
@@ -447,9 +449,9 @@ uint8_t RFM69_ReceiveMessage_Packet_Mode(uint8_t* buffer, uint8_t maxLen)
     uint8_t rssi = RFM69_ReadReg(RegRssiValue);
     RFM69_printfs("\r\n Ambient Noise (RSSI): -%d dBm\r\n", rssi/2);
 
-    uint32_t tick = HAL_GetTick();
+    uint32_t tick = MCAL_RFM69H_GET_TICK();
     while (!(RFM69_ReadReg(RegIrqFlagsFIFO) & 0x04)) {
-        if ((HAL_GetTick() - tick) > TimeoutNoPacketReceived)
+        if ((MCAL_RFM69H_GET_TICK() - tick) > TimeoutNoPacketReceived)
         {
         	RFM69_printf(R, "!RX Timeout", "No packet received\r\n");
             RFM69_SetMode(RFM69_MODE_STDBY);
@@ -503,7 +505,7 @@ uint16_t RFM69_Text_To_Binary_Payload(const char *texte, uint8_t *payload)
  * RAW MODE : Fill Up Payload
  */
 #define CLEAR_BUFFER(buf) memset((buf), 0, sizeof(buf))
-void RFM69_RAW_FillUp_Payload(TrameAX *trame, const uint8_t adresse[14], uint8_t control, uint8_t Type_Data, const uint8_t *payload_data, uint8_t size_payload, uint16_t fcs_val)
+uint16_t RFM69_RAW_FillUp_Payload(TrameAX *trame, const uint8_t adresse[14], uint8_t control, uint8_t Type_Data, const uint8_t *payload_data, uint8_t size_payload, uint16_t fcs_val)
 {
     trame->flag_start = 0x7E;
     memcpy(trame->adresse, adresse, 14);
@@ -511,10 +513,33 @@ void RFM69_RAW_FillUp_Payload(TrameAX *trame, const uint8_t adresse[14], uint8_t
     trame->payload.control   = control;
     trame->payload.Type_Data = Type_Data;
 
-    memcpy(trame->payload.data, payload_data, 254);
+    memcpy((uint8_t *)trame->payload.data, payload_data, size_payload);
 
-    trame->fcs        = (fcs_val >> 8) | (fcs_val << 8);
-    trame->flag_end   = 0x7E;
+    uint8_t *ptr_fcs = (uint8_t *)&trame->payload.data[size_payload];
+    uint16_t fcs_swapped = (fcs_val >> 8) | (fcs_val << 8);
+    memcpy(ptr_fcs, &fcs_swapped, 2);
+    ptr_fcs[2] = 0x7E;
+
+    return 1 + 14 + 2 + size_payload + 2 + 1;
+}
+
+/*
+ * PRINT STATUS OF RADIO
+ */
+void Set_DASHBOARD_STATUS(void)
+{
+	RFM69_GOTO_XY(0, 0);
+	RFM69_printfs(C "===================================== RADIO MONITORING =====================================" W "\r\n");
+	RFM69_Mode_t currentMode = RFM69_GetMode();
+    switch (currentMode) {
+        case RFM69_MODE_SLEEP: RFM69_printf(C, "[STATUS] ", "SLEEP    "); break;
+        case RFM69_MODE_STDBY: RFM69_printf(C, "[STATUS] ", "STANDBY  "); break;
+        case RFM69_MODE_FS:    RFM69_printf(C, "[STATUS] ", "FS       "); break;
+        case RFM69_MODE_TX:    RFM69_printf(C, "[STATUS] ", "TX       "); break;
+        case RFM69_MODE_RX:    RFM69_printf(C, "[STATUS] ", "RX       "); break;
+        default:               RFM69_printf(J, "[STATUS] ", "UNDEFINED"); break;
+    }
+    RFM69_printfs(C "\r\n============================================================================================" W "\r\n");
 }
 
 /*
@@ -522,7 +547,12 @@ void RFM69_RAW_FillUp_Payload(TrameAX *trame, const uint8_t adresse[14], uint8_t
 */
 uint8_t RFM69_RAW_DATA_SEND(const uint8_t *buffer, uint16_t size)
 {
+    HAL_NVIC_DisableIRQ(RFM_DCLK_EXTI_IRQn);
+    Set_Pin_Output(RFM_DATA_PORT, RFM_DATA_PIN);
+
     RFM69_SetMode(RFM69_MODE_TX);
+
+    Set_DASHBOARD_STATUS();
 
     if (RFM69_WaitForPLLLock(200) == 0)
     {
@@ -536,24 +566,33 @@ uint8_t RFM69_RAW_DATA_SEND(const uint8_t *buffer, uint16_t size)
 
     RFM69_RAW_Transmit_Byte(0, 2);
 
-    // Module Synchronization by sending 0x55 = 01010101..
     for (int i = 0; i < 4; i++) {
-    	RFM69_RAW_Transmit_Byte(0x55, 0);
+        RFM69_RAW_Transmit_Byte(0x55, 0);
     }
 
-    // Send PayLoad
     for (uint16_t i = 0; i < size; i++) {
-    	uint8_t use_stuffing = (i > 0 && i < (size - 1)) ? 1 : 0;
-    	RFM69_RAW_Transmit_Byte(buffer[i], use_stuffing);
+        uint8_t use_stuffing = (buffer[i] == 0x7E) ? 0 : 1;
+        RFM69_RAW_Transmit_Byte(buffer[i], use_stuffing);
     }
 
     RFM69_SetMode(RFM69_MODE_STDBY);
 
     HAL_GPIO_WritePin(RFM_DATA_PORT, RFM_DATA_PIN, GPIO_PIN_RESET);
 
-	RFM69_Delay(200);
-	return 1;
+    RFM69_Delay(200);
+    return 1;
 }
+
+/*
+ * RAW MODE : Receive Data
+ */
+void Set_RX_MODE(void)
+{
+	HAL_NVIC_EnableIRQ(RFM_DCLK_EXTI_IRQn);
+	Set_Pin_Input(RFM_DATA_PORT, RFM_DATA_PIN);
+	RFM69_SetMode(RFM69_MODE_RX);
+}
+
 
 /*
  * RAW MODE : Transmit Byte
@@ -625,43 +664,62 @@ uint16_t RFM69_RAW_CRC16_Calculation_Buffer(const uint8_t *data, uint16_t length
 /*
  * RAW MODE : CRC CHECK
  */
-void CRC_CHECK(const TrameAX *trame)
+void CRC_CHECK(const TrameAX *trame, uint16_t rx_longueur_paquet)
 {
-   if (trame == NULL) {
-   	RFM69_printf(R, "CRC_CHECK", "NULL\r\n");
-       return;
-   }
+    if (trame == NULL)
+        return;
 
-   uint16_t crc_received = ((trame->fcs & 0x00FF) << 8) | ((trame->fcs & 0xFF00) >> 8);
-   uint16_t crc_calculated = RFM69_RAW_CRC16_Calculation_Buffer((const uint8_t *)trame->payload.data, 254);
+    if (rx_longueur_paquet < 3)
+    {
+        RFM69_printf(R, "CRC_CHECK", "PACKET TOO SHORT\r\n");
+        return;
+    }
 
-   if (crc_calculated == crc_received)
-   {
-   	RFM69_printf(G, "[GOOD CRC]", "0x%02X\r\n", crc_calculated);
-   }
-   else
-   {
-		RFM69_printf(R, "[BAD CRC ]", "0x%02X\r\n", crc_calculated);
-   }
+    const uint8_t *p = trame->payload.data;
+
+    // structure : [DATA ...][CRC_H][CRC_L][FLAG]
+
+    uint16_t data_size = rx_longueur_paquet - 3;
+
+    uint16_t crc_received =
+        ((uint16_t)p[data_size] << 8) |
+        ((uint16_t)p[data_size + 1]);
+
+    uint8_t flag_end = p[data_size + 2];
+
+    uint16_t crc_calculated =
+        RFM69_RAW_CRC16_Calculation_Buffer(p, data_size);
+
+    RFM69_printf(W, "[CRC RX   ]", "0x%04X\r\n", crc_received);
+    RFM69_printf(W, "[FLAG END ]", "0x%02X\r\n", flag_end);
+
+    if (crc_calculated == crc_received)
+        RFM69_printf(G, "[GOOD CRC]", "0x%04X\r\n", crc_calculated);
+    else
+        RFM69_printf(R, "[BAD CRC ]", "0x%04X\r\n", crc_calculated);
 }
 
 /*
  * RAW MODE : Complete Payload up to 256 bytes
  */
-void RFM69_Pad_To_256(uint8_t *buffer, uint16_t len)
+uint16_t RFM69_Padding(uint8_t *buffer, uint16_t len)
 {
-    if (len > 254)
+    uint8_t remainder = len % 16;
+
+    uint8_t padding_needed = (remainder == 0) ? 0 : (16 - remainder);
+
+    if (len + padding_needed > 256)
     {
-        RFM69_printf(R, "!ERROR", "Too long.. %d >254 bytes\r\n", len);
-        RFM69_printf(R, "!ERROR", "Payload won't be send normally\r\n");
-        RFM69_printf(R, "!ERROR", "NEED TO ABORD\r\n");
-        len = 254;
+        padding_needed = 256 - len;
+        RFM69_printf(R, "!ERROR", "Too long.. %d >256 bytes\r\n", len);
     }
 
-    for (uint16_t i = len; i < 254; i++)
+    for (uint16_t i = 0; i < padding_needed; i++)
     {
-        buffer[i] = 0x55;
+        buffer[len + i] = 0x55;
     }
+
+    return len + padding_needed;
 }
 
 /*
@@ -792,9 +850,9 @@ int32_t RFM69_GetFrequencyErrorFeiHz(void)
     {
         RFM69_WriteReg(RegAfcFei, regAfcFei | 0x20);
 
-        uint32_t tick = HAL_GetTick();
+        uint32_t tick = MCAL_RFM69H_GET_TICK();
         while (!(RFM69_ReadReg(RegAfcFei) & 0x40)) {
-            if ((HAL_GetTick() - tick) > 10) break;
+            if ((MCAL_RFM69H_GET_TICK() - tick) > 10) break;
         }
     }
 
@@ -899,17 +957,18 @@ uint8_t RFM69_GetTemperature(void)
 
 
 /*
- * Get information of Configuration
+ * PRINT CONFIGURATION OF RADIO
  */
-void PRINT_ConfigData(void)
+void Set_DASHBOARD_CONFIG(void)
 {
+	RFM69_GOTO_XY(4, 0);
  	uint8_t val = RFM69_ReadReg(0x02);
 
  	uint8_t mode = (val & 0x60);
  	uint8_t modulation = (val & 0x18);
  	uint8_t shaping = (val & 0x03);
 
- 	RFM69_printfs("\r\n\033[36m[CONFIG RFM69HCW]\033[0m\r\n");
+ 	RFM69_printfs("\033[36m[CONFIG RFM69HCW]\033[0m\r\n");
 
  	if(mode == RFM69_PACKET_MODE)
  	{
@@ -950,6 +1009,21 @@ void PRINT_ConfigData(void)
      	RFM69_printfs("[Operation Mode] : RECEIVEING\r\n");
      }
 
+     RFM69_PA_Select_t PA = RFM69_GetPowerAmplifier();
+ 	switch (PA) {
+ 		case PA_0:
+ 			printf("[Power Amplifier] : PA_0 (OUT RFIO)");
+ 			break;
+ 		case PA_1:
+ 			printf("[Power Amplifier] : PA_1 (OUT ANT)");
+ 			break;
+ 		case PA_1_2:
+ 			printf("[Power Amplifier] : PA_1_2 (OUT ANT POWER)");
+ 			break;
+ 		case PA_HIGH_POWER:
+ 			printf("[Power Amplifier] : PA_HIGH_POWER (OUT BOOST)");
+ 			break;
+ 	}
      uint8_t msb = RFM69_ReadReg(0x07);
      uint8_t mid = RFM69_ReadReg(0x08);
      uint8_t lsb = RFM69_ReadReg(0x09);
@@ -965,87 +1039,42 @@ void PRINT_ConfigData(void)
      uint32_t currentBitrate = (bitReg == 0) ? 0 : (32000000 / bitReg);
      RFM69_printfs("[Bitrate] : %lu bps\r\n", (unsigned long)currentBitrate);
 
-
+     uint32_t Fdev = RFM69_GetFdev();
+     RFM69_printf(W, "[Frequency Deviation]", "%ld Hz\r\n", Fdev);
+     RFM69_GetLnaStatus();
+     int32_t AFC_Correction = RFM69_GetAFCCorrectionHz();
+     RFM69_printf(W, "[AFC Correction]", "%ld Hz\r\n", AFC_Correction);
+     RFM69_printfs(C "============================================================================================" W "\r\n");
 }
 
 /*
  * PRINT DATA TRAME
  */
-void PRINT_Data_TRAME(const volatile TrameAX *trame)
+void Set_DASHBOARD_DATA(const volatile TrameAX *trame, uint16_t len)
 {
-  	for (int i = 0; i < 254; i += 16)
-		{
-			RFM69_printfs("Line %3d : ", i);
+	RFM69_GOTO_XY(26, 0);
+	RFM69_printfs(C "\r\n===================================[ DATA ]=================================================" W "\r\n");
 
-			for (int j = 0; j < 16; j++)
-			{
-				if (i + j < 254) {
-					RFM69_printfs("%02X ", trame->payload.data[i + j]);
-				} else {
-					RFM69_printfs("   ");
-				}
-			}
-
-			RFM69_printfs(" | ");
-
-			for (int j = 0; j < 16; j++)
-			{
-				if (i + j < 254) {
-					uint8_t c = trame->payload.data[i + j];
-					if (c >= 32 && c <= 126) {
-						RFM69_printfs("%c", c);
-					} else {
-						RFM69_printfs(".");
-					}
-				}
-			}
-			RFM69_printfs(" | ");
-			RFM69_printfs("\r\n");
-		}
-
-}
-
-
-
-
-
-
-
-
-
-/*
- * Print Mode
- */
-void PRINT_MODE(void)
-{
-	RFM69_Mode_t currentMode = RFM69_GetMode();
-	switch (currentMode)
+	for (int i = 0; i < 254; i++)
 	{
-		case RFM69_MODE_SLEEP:
-			RFM69_printf(B, "[STATUS] ", "MODE SLEEP...");
-			break;
+	    uint8_t c = trame->payload.data[i];
 
-		case RFM69_MODE_STDBY:
-			RFM69_printf(W, "[STATUS] ", "MODE STANDBY.");
-			break;
+	    if (c == 0x7E) {
+	        break;
+	    }
 
-		case RFM69_MODE_FS:
-			RFM69_printf(M, "[STATUS] ", "MODE FS");
-			break;
-
-		case RFM69_MODE_TX:
-			RFM69_printf(R, "[STATUS] ", "MODE (TX)");
-			break;
-
-		case RFM69_MODE_RX:
-			RFM69_printf(C, "[STATUS] ", "MODE (RX)");
-			break;
-
-		default:
-			RFM69_printf(J, "[STATUS] ", "MODE UNDEFINED.");
-			break;
+	    if (c >= 32 && c <= 126) {
+	        RFM69_printfs("%c", c);
+	    } else {
+	        RFM69_printfs(".");
+	    }
 	}
+
+	RFM69_printfs("\r\n");
+  	RFM69_printfs(C "============================================================================================" W "\r\n");
 }
+
+
 
 
 static void Display_AX25_Address(const volatile uint8_t *adresse)
@@ -1064,36 +1093,11 @@ static void Display_AX25_Address(const volatile uint8_t *adresse)
 
 
 /*
- * PayLoad Print :
+ * PRINT_DASHBOARD_PAYLOAD_RECEIVE
  */
-void GET_DASHBOARD(void)
+void Set_DASHBOARD_PAYLOAD_INFO_RECEIVE(const volatile TrameAX *trame, uint16_t rx_longueur_paquet)
 {
-	RFM69_REFRESH_SCREEN();
-	RFM69_printfs(C "===================================== RADIO MONITORING =====================================" W "\r\n");
-	RFM69_Mode_t currentMode = RFM69_GetMode();
-    switch (currentMode) {
-        case RFM69_MODE_SLEEP: RFM69_printf(B, "[STATUS] ", "SLEEP    "); break;
-        case RFM69_MODE_STDBY: RFM69_printf(W, "[STATUS] ", "STANDBY  "); break;
-        case RFM69_MODE_FS:    RFM69_printf(M, "[STATUS] ", "FS       "); break;
-        case RFM69_MODE_TX:    RFM69_printf(R, "[STATUS] ", "TX       "); break;
-        case RFM69_MODE_RX:    RFM69_printf(C, "[STATUS] ", "RX       "); break;
-        default:               RFM69_printf(J, "[STATUS] ", "UNDEFINED"); break;
-    }
-    RFM69_printfs(C "\r\n============================================================================================" W "\r\n");
-    PRINT_ConfigData();
-    uint32_t Fdev = RFM69_GetFdev();
-    RFM69_printf(W, "[Frequency Deviation]", "%ld Hz\r\n", Fdev);
-    RFM69_GetLnaStatus();
-    int32_t AFC_Correction = RFM69_GetAFCCorrectionHz();
-    RFM69_printf(W, "[AFC Correction]", "%ld Hz\r\n", AFC_Correction);
-    RFM69_printfs(C "==================================== END RADIO MONITORING ===================================" W "\r\n");
-
-}
-
-
-void GET_RECEIVE_DASHBOARD(const volatile TrameAX *trame)
-{
-	RFM69_GOTO_XY(18, 1);
+	RFM69_GOTO_XY(16, 1);
 	RFM69_printfs(C "\r\n============================================================================================" W "\r\n");
     if (trame == NULL) {
         RFM69_printf(R, "GET_RX_DASHBOARD", " Pointer NULL\r\n");
@@ -1101,39 +1105,36 @@ void GET_RECEIVE_DASHBOARD(const volatile TrameAX *trame)
     }else{
     	RFM69_printf(G, "GET_RX_DASHBOARD", " Pointer OK\r\n");
     }
-    RFM69_printfs(C "\r\n============================================================================================" W "\r\n");
-    RFM69_printf((trame->flag_start == 0x7E) ? G : R, "[FLAG START]", "0x%02X\r\n", trame->flag_start);
-    Display_AX25_Address(trame->adresse);
-    RFM69_printf(W, "[CONTROL   ]", "0x%02X\r\n", trame->payload.control);
-    RFM69_printf(W, "[TYPE DATA ]", "0x%02X", trame->payload.Type_Data);
-    switch(trame->payload.Type_Data) {
-        case 0x01: RFM69_printfs("  ( COMMAND )\r\n"); break;
-        case 0x02: RFM69_printfs("  (   TEXT  )\r\n"); break;
-        default:   RFM69_printfs("  (UNDEFINED)\r\n"); break;
-    }
+    // On pointe directement sur le début de la zone mémoire séquentielle
+        const uint8_t *p = (const uint8_t *)&trame->payload;
 
-    uint16_t fcs_swapped = ((trame->fcs & 0x00FF) << 8) | ((trame->fcs & 0xFF00) >> 8);
-    RFM69_printf(W, "[CRC      ]", "0x%04X\r\n", fcs_swapped);
+        printf("\r\n==================== RAW BYTES RECEIVED (%d Bytes) ====================\r\n", rx_longueur_paquet);
 
-    RFM69_printf((trame->flag_end == 0x7E) ? G : R, "[FLAG END]", "0x%02X\r\n", trame->flag_end);
+        for (uint16_t i = 0; i < rx_longueur_paquet; i++)
+        {
+            printf("%02X ", p[i]);
 
-    CRC_CHECK((const TrameAX *)trame);
+            // Crée un bloc propre de 16 octets par ligne
+            if ((i + 1) % 16 == 0)
+            {
+                printf("\r\n");
+            }
+        }
 
-    RFM69_printfs(C "\r\n============================================================================================" W "\r\n");
-    RFM69_printf(W, "[DATA]", "\r\n");
-    for (int i = 0; i < 254; i++) {
-        uint8_t c = ((uint8_t*)trame->payload.data)[i];
-        RFM69_printfs("%c", (c >= 32 && c <= 126) ? c : '.');
-    }
-    RFM69_printfs("\r\n");
-    RFM69_printfs(C "\r\n============================================================================================" W "\r\n");
-
+        // Ajoute un retour à la ligne final si le compte n'était pas un multiple de 16
+        if (rx_longueur_paquet % 16 != 0)
+        {
+            printf("\r\n");
+        }
+    RFM69_printfs(C "============================================================================================" W "\r\n");
 }
 
-
-void GET_TRANSMIT_DASHBOARD(const volatile TrameAX *trame)
+/*
+ * PRINT_DASHBOARD_PAYLOAD_TRANSMIT
+ */
+void Set_DASHBOARD_PAYLOAD_INFO_TRANSMIT(const volatile TrameAX *trame, uint16_t total_size_message)
 {
-	RFM69_GOTO_XY(18, 1);
+	RFM69_GOTO_XY(16, 1);
 	RFM69_printfs(C "\r\n============================================================================================" W "\r\n");
     if (trame == NULL) {
         RFM69_printf(R, "GET_TX_DASHBOARD", " Pointer NULL\r\n");
@@ -1141,9 +1142,12 @@ void GET_TRANSMIT_DASHBOARD(const volatile TrameAX *trame)
     }else{
     	RFM69_printf(G, "GET_TX_DASHBOARD", " Pointer OK\r\n");
     }
-    RFM69_printfs(C "\r\n============================================================================================" W "\r\n");
+    RFM69_printfs(C "============================================================================================" W "\r\n");
+    RFM69_printfs(C "SENDING DATA TO     : " W "\r\n");
+
+    // 1. Affichage des éléments fixes de l'en-tête
     RFM69_printf((trame->flag_start == 0x7E) ? G : R, "[FLAG START]", "0x%02X\r\n", trame->flag_start);
-    Display_AX25_Address(trame->adresse);
+    Display_AX25_Address((const uint8_t *)trame->adresse);
     RFM69_printf(W, "[CONTROL   ]", "0x%02X\r\n", trame->payload.control);
     RFM69_printf(W, "[TYPE DATA ]", "0x%02X", trame->payload.Type_Data);
     switch(trame->payload.Type_Data) {
@@ -1152,63 +1156,64 @@ void GET_TRANSMIT_DASHBOARD(const volatile TrameAX *trame)
         default:   RFM69_printfs("  (UNDEFINED)\r\n"); break;
     }
 
-    uint16_t fcs_swapped = ((trame->fcs & 0x00FF) << 8) | ((trame->fcs & 0xFF00) >> 8);
-    RFM69_printf(W, "[CRC      ]", "0x%04X\r\n", fcs_swapped);
+    // 1. Calcul de la taille utile
+        uint16_t taille_bloc_aes = total_size_message - 20;
+        RFM69_printf(W, "[DATA SIZE ]", "%d octets\r\n", taille_bloc_aes);
 
-    RFM69_printf((trame->flag_end == 0x7E) ? G : R, "[FLAG END]", "0x%02X\r\n", trame->flag_end);
+        // 2. On passe en octets bruts pour ne pas s'embêter
+        const uint8_t *recette_brute = (const uint8_t *)trame;
 
-    CRC_CHECK((const TrameAX *)trame);
-    RFM69_PA_Select_t mode = RFM69_GetPowerAmplifier();
-	switch (mode) {
-		case PA_0:
-			printf("[Power Amplifier] : PA_0 (OUT RFIO)");
-			break;
-		case PA_1:
-			printf("[Power Amplifier] : PA_1 (OUT ANT)");
-			break;
-		case PA_1_2:
-			printf("[Power Amplifier] : PA_1_2 (OUT ANT POWER)");
-			break;
-		case PA_HIGH_POWER:
-			printf("[Power Amplifier] : PA_HIGH_POWER (OUT BOOST)");
-			break;
-	}
-    RFM69_printfs(C "\r\n============================================================================================" W "\r\n");
-    RFM69_printf(W, "[DATA]", "\r\n");
-    for (int i = 0; i < 254; i++) {
-        uint8_t c = ((uint8_t*)trame->payload.data)[i];
-        RFM69_printfs("%c", (c >= 32 && c <= 126) ? c : '.');
+        // 3. Extraction du CRC
+        uint16_t fcs_dynamic;
+        memcpy(&fcs_dynamic, &recette_brute[total_size_message - 3], 2);
+        uint16_t fcs_swapped = ((fcs_dynamic & 0x00FF) << 8) | ((fcs_dynamic & 0xFF00) >> 8);
+        RFM69_printf(W, "[CRC       ]", "0x%04X\r\n", fcs_swapped);
+
+        // 4. FIX DE SÉCURITÉ : On vire le test de couleur G/R qui fait planter l'affichage
+        uint8_t flag_end_dynamic = recette_brute[total_size_message - 1];
+
+        // On force la couleur blanche 'W' comme pour le CRC
+        RFM69_printf(W, "[FLAG END  ]", "0x%02X\r\n", flag_end_dynamic);
+
+        RFM69_printfs(C "============================================================================================" W "\r\n");
     }
-    RFM69_printfs("\r\n");
-    RFM69_printfs(C "\r\n============================================================================================" W "\r\n");
 
-}
-
-
-static uint8_t rssi_min_brut = 0;   // 0 est la valeur de départ pour le pire signal possible
-static uint8_t rssi_max_brut = 255; // 255 est la valeur de départ pour le meilleur signal possible
-static int premier_calcul = 1;      // Flag pour initialiser au premier démarrage
-void GET_time_DASHBOARD(void)
+/*
+ * PRINT_DASHBOARD_RSSI
+ */
+static uint8_t RssiMin = 0;
+static uint8_t RssiMax = 255;
+static int FirstCalculation = 1;
+void Set_DASHBOARD_RSSI(void)
 {
     RFM69_GOTO_XY(45, 1);
-    RFM69_printfs(C "===================================== REAL TIME MONITORING ==================================" W "\r\n");
-    uint8_t rssi_actuel = RFM69_RSSI();
-    if (premier_calcul) {
-        rssi_min_brut = rssi_actuel;
-        rssi_max_brut = rssi_actuel;
-        premier_calcul = 0;
+    RFM69_printfs(C "==========================================[RSSI]=============================================" W "\r\n");
+    uint8_t rssi = RFM69_RSSI();
+    if (FirstCalculation) {
+    	RssiMin = rssi;
+    	RssiMax = rssi;
+        FirstCalculation = 0;
     }
 
-    if (rssi_actuel > rssi_min_brut) {
-        rssi_min_brut = rssi_actuel;
+    if (rssi > RssiMin) {
+    	RssiMin = rssi;
     }
-    if (rssi_actuel < rssi_max_brut) {
-        rssi_max_brut = rssi_actuel;
+    if (rssi < RssiMax) {
+    	RssiMax = rssi;
     }
-    RFM69_printfs(W "[RSSI] : -%d dBm  |  " G "Max : -%d dBm" W "  |  " R "Min : -%d dBm" W CLEAR_LINE "\r\n",
-                  rssi_actuel / 2,
-                  rssi_max_brut / 2,
-                  rssi_min_brut / 2);
-
+    RFM69_printfs(W "[RSSI] : -%d dBm  |  " G "Max : -%d dBm" W "  |  " R "Min : -%d dBm" W CLEAR_LINE "\r\n", rssi / 2,  RssiMax / 2,  RssiMin / 2);
     RFM69_printfs(C "============================================================================================" W "\r\n");
+}
+
+/*
+ * SET PIN OUTPUT
+ */
+void Set_Pin_Output(void* GPIOx, uint16_t GPIO_Pin) {
+    MCAL_RFM69H_SET_PIN_OUTPUT(GPIOx, GPIO_Pin);
+}
+/*
+ * SET PIN INPUT
+ */
+void Set_Pin_Input(void* GPIOx, uint16_t GPIO_Pin) {
+    MCAL_RFM69H_SET_PIN_INPUT(GPIOx, GPIO_Pin);
 }

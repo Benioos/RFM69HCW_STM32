@@ -185,9 +185,11 @@ void AES128_Encrypt(state_t state, const uint8_t RoundKey[176])
 }
 
 
-void AES128_Encrypt_Buffer256(uint8_t buffer[256], const uint8_t RoundKey[176])
+void AES128_Encrypt_Buffer256(uint8_t *buffer, const uint8_t RoundKey[176], uint16_t data_size)
 {
-    for (uint16_t i = 0; i < 256; i += 16)
+    uint16_t exact_crypto_size = data_size - (data_size % 16);
+
+    for (uint16_t i = 0; i < exact_crypto_size; i += 16)
     {
         state_t state;
         uint8_t index = 0;
@@ -301,9 +303,9 @@ void AES128_Decrypt(state_t state, const uint8_t RoundKey[176])
     AddRoundKey(state, RoundKey);
 }
 
-void AES128_Decrypt_Buffer256(uint8_t buffer[256], const uint8_t RoundKey[176])
+void AES128_Decrypt_Buffer256(uint8_t *buffer,uint16_t payload_total_size, const uint8_t RoundKey[176])
 {
-    for (uint16_t i = 0; i < 256; i += 16)
+    for (uint16_t i = 0; i < payload_total_size; i += 16)
     {
         state_t state;
         uint8_t index = 0;

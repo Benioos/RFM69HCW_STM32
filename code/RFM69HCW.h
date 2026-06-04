@@ -20,15 +20,9 @@
 #include <stdio.h>
 #include  <string.h>
 #include <ctype.h>
-#define RFM69_GOTO_XY(l, c) printf("\033[%d;%dH", l, c)
-// Broche de données (DATA)
-#define RFM_DATA_PIN            GPIO_PIN_4
-#define RFM_DATA_PORT           GPIOB
+#include <MCAL_RFM69HCW.h>
 
-// Broche d'horloge (DCLK)
-#define RFM_DCLK_PIN            GPIO_PIN_12
-#define RFM_DCLK_PORT           GPIOF
-#define RFM_DCLK_EXTI_IRQn      EXTI15_10_IRQn
+#define RFM69_GOTO_XY(l, c) printf("\033[%d;%dH", l, c)
 
 #define RegVersion 0x10 // Version code of the chips
 
@@ -83,6 +77,7 @@
 #define RegIrqFlags1 0x27
 
 #define RegDioMapping1 0x25
+
 /*
  * Activate And Deactivate all DEBUG PRINTF and Delay in one time !
  * You only need to comment or uncomment the line below
@@ -111,7 +106,7 @@
 #endif
 
 #ifdef RFM69_DEBUG_ENABLED
-    #define RFM69_Delay(...) HAL_Delay(__VA_ARGS__)
+    #define RFM69_Delay(...) MCAL_RFM69H_DELAY_MS(__VA_ARGS__)
 #else
     #define RFM69_Delay(...)
 #endif
@@ -129,7 +124,7 @@
 /*
  * Init SPI Pin and CS pin
  */
-void RFM69_Init(SPI_HandleTypeDef *hspi, GPIO_TypeDef *CS_Port, uint16_t CS_Pin);
+void RFM69_Init(void *hspi, void *CS_Port, uint16_t CS_Pin);
 
 /*
  * Mode Choice
@@ -410,15 +405,14 @@ uint8_t RFM69_GetTemperature(void);
 typedef struct {
     uint8_t control;          // 1 Byte
     uint8_t Type_Data;        // 1 Byte
-    uint8_t data[254];        // 254 Bytes
+    uint8_t data[257];        // 257 Bytes
 }Payload;
 
 typedef struct {
     uint8_t  flag_start;    // 1 Bytes
     uint8_t  adresse[14];   // 14 Bytes
-    Payload payload;		// 256 Bytes
-    uint16_t fcs;           // 2 Bytes
-    uint8_t  flag_end;      // 1 Bytes
+    Payload payload;		// 259 Bytes
+
 } TrameAX;
 
 /*
@@ -434,12 +428,17 @@ uint16_t RFM69_RAW_CRC16_Calculation_Buffer(const uint8_t *data, uint16_t length
 /*
  * FIll Up Trame
  */
-void RFM69_RAW_FillUp_Payload(TrameAX *trame,const uint8_t adresse[14],uint8_t  control, uint8_t Type_Data, const uint8_t *payload,uint8_t size_payload, uint16_t fcs_val);
+uint16_t RFM69_RAW_FillUp_Payload(TrameAX *trame,const uint8_t adresse[14],uint8_t  control, uint8_t Type_Data, const uint8_t *payload,uint8_t size_payload, uint16_t fcs_val);
 
 /*
   * RAW Mode SEND PAYLOAD
 */
 uint8_t RFM69_RAW_DATA_SEND(const uint8_t *buffer, uint16_t size);
+
+/*
+ * RAW MODE : Receive Data
+ */
+void Set_RX_MODE(void);
 
 /*
  * RAW Mode Transmit Byte
@@ -461,29 +460,50 @@ uint8_t RFM69_WaitForPLLLock(uint32_t timeout_ms);
  */
 uint8_t RFM69_WaitForTxReady(uint32_t timeout_ms);
 
-void RFM69_Pad_To_256(uint8_t *buffer, uint16_t len);
+uint16_t RFM69_Padding(uint8_t *buffer, uint16_t len);
 
-/*
- * DashBoard
- */
-void GET_DASHBOARD(void);
-
-void GET_RECEIVE_DASHBOARD(const volatile TrameAX *trame);
 /*
  * CRC Check DASHBOARD
  */
-void CRC_CHECK(const TrameAX *trame);
-
+void CRC_CHECK(const TrameAX *trame, uint16_t rx_longueur_paquet);
 
 /*
- * Print Mode
+ * PRINT CONFIGURATION OF RADIO
  */
-void PRINT_MODE(void);
+void Set_DASHBOARD_CONFIG(void);
 
 /*
  * PRINT DATA TRAME
  */
-void PRINT_Data_TRAME(const volatile TrameAX *trame);
-void GET_TRANSMIT_DASHBOARD(const volatile TrameAX *trame);
-void GET_time_DASHBOARD(void);
+void Set_DASHBOARD_DATA(const volatile TrameAX *trame, uint16_t len);
+
+/*
+ * PRINT_DASHBOARD_PAYLOAD_RECEIVE
+ */
+void Set_DASHBOARD_PAYLOAD_INFO_RECEIVE(const volatile TrameAX *trame, uint16_t rx_longueur_paquet);
+
+/*
+ * PRINT_DASHBOARD_PAYLOAD_TRANSMIT
+ */
+void Set_DASHBOARD_PAYLOAD_INFO_TRANSMIT(const volatile TrameAX *trame, uint16_t payload_data_size);
+
+/*
+ * PRINT STATUS OF RADIO
+ */
+void Set_DASHBOARD_STATUS(void);
+
+/*
+ * PRINT_DASHBOARD_RSSI
+ */
+void Set_DASHBOARD_RSSI(void);
+
+/*
+ * SET PIN OUTPUT
+ */
+void Set_Pin_Output(void* GPIOx, uint16_t GPIO_Pin);
+
+/*
+ * SET PIN INPUT
+ */
+void Set_Pin_Input(void* GPIOx, uint16_t GPIO_Pin);
 #endif /* INC_RFM69HCW_H_ */

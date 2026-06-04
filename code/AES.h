@@ -84,7 +84,7 @@ void KeyExpansion(uint8_t* RoundKey, const uint8_t* Key);
 
 void AES128_Encrypt(state_t state, const uint8_t RoundKey[176]);
 
-void AES128_Encrypt_Buffer256(uint8_t buffer[256], const uint8_t RoundKey[176]);
+void AES128_Encrypt_Buffer256(uint8_t *buffer, const uint8_t RoundKey[176], uint16_t data_size);
 
 
 /*
@@ -117,6 +117,6 @@ void InvMixColumns(state_t state);
 
 void AES128_Decrypt(state_t state, const uint8_t RoundKey[176]);
 
-void AES128_Decrypt_Buffer256(uint8_t buffer[256], const uint8_t RoundKey[176]);
+void AES128_Decrypt_Buffer256(uint8_t *buffer,uint16_t payload_total_size, const uint8_t RoundKey[176]);
 
 #endif /* INC_AES_H_ */
