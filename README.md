@@ -1,8 +1,10 @@
-# STM32 RFM69HCW / SX1231 Driver (HAL-Based)
+# Universal RFM69HCW / SX1231 Driver (MCAL-Based)
 
-This is a C driver for the **RFM69HCW / SX1231** RF transceiver, designed for **STM32** microcontrollers using the **STM32 HAL** library.
+This is a portable, hardware-agnostic C driver for the **RFM69HCW / SX1231** RF transceiver. Originally built for **STM32 (HAL)**, it can now be easily ported to **any microcontroller** (ESP32, Arduino, Raspberry Pi Pico...) without touching the core logic, thanks to a lightweight MCAL (Microcontroller Abstraction Layer).
 
-This library provides a way of controlling the radio module over SPI. 
+This library provides a way of controlling the radio module over SPI, configuring packet or raw modes.
+
+---
 
 
 <img src="https://cdn-shop.adafruit.com/970x728/3070-07.jpg" alt="Adafruit RFM69HCW Transceiver Radio" width="260">
@@ -202,7 +204,13 @@ The SPI was configured as follows:
 - **CPOL :** Low   
 - **CPHA :** 2 Edge  
 - **First Bit :** MSB First
-  
+
+## 🚀 How to Port the Driver to Another Microcontroller
+
+Porting this driver to a new platform requires **zero modifications** to the `RFM69HCW.c` file. Everything happens in the header configuration (`MCAL_RFM69HCW.h`).
+
+You simply need to map the `MCAL_RFM69H_...` macros to your new platform's specific libraries.
+
 ## 🔗 Resources & Links
 * [Official Website](https://www.adafruit.com/product/3071)
 * [Datasheet RFM69HCW](https://cdn.sparkfun.com/datasheets/Wireless/General/RFM69HCW-V1.1.pdf)
