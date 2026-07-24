@@ -64,7 +64,7 @@ void RFM69_Init(void *hspi, void *CS_Port, uint16_t CS_Pin)
     rfm69_hspi = hspi;
     rfm69_cs_port = CS_Port;
     rfm69_cs_pin = CS_Pin;
-
+    MCAL_RFM69H_CS_SELECT(rfm69_cs_port, rfm69_cs_pin);
     MCAL_RFM69H_INIT();
 
     MCAL_RFM69H_CS_DESELECT(rfm69_cs_port, rfm69_cs_pin);
@@ -290,6 +290,7 @@ uint8_t RFM69_WaitForPLLLock(uint32_t timeout_ms)
     {
         if ((MCAL_RFM69H_GET_TICK() - tick) > timeout_ms)
         {
+
             RFM69_printf(R, "!ERROR", "PLL never locked\r\n");
             RFM69_printf(R, "!ABORD", "\r\n");
 
@@ -547,6 +548,8 @@ void Set_DASHBOARD_STATUS(void)
 */
 uint8_t RFM69_RAW_DATA_SEND(const uint8_t *buffer, uint16_t size)
 {
+	RFM69_SetMode(RFM69_MODE_STDBY);
+
     HAL_NVIC_DisableIRQ(RFM_DCLK_EXTI_IRQn);
     Set_Pin_Output(RFM_DATA_PORT, RFM_DATA_PIN);
 
@@ -580,6 +583,7 @@ uint8_t RFM69_RAW_DATA_SEND(const uint8_t *buffer, uint16_t size)
     HAL_GPIO_WritePin(RFM_DATA_PORT, RFM_DATA_PIN, GPIO_PIN_RESET);
 
     RFM69_Delay(200);
+    HAL_NVIC_EnableIRQ(RFM_DCLK_EXTI_IRQn);
     return 1;
 }
 
@@ -812,21 +816,16 @@ void RFM69_SetLnaGain(RFM69_LnaGain_t gain)
 /*
  * Get LNA Status
  */
-void RFM69_GetLnaStatus(void)
+uint8_t RFM69_GetLnaGain(void)
 {
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET); // Sélection si nécessaire
     uint8_t val = RFM69_ReadReg(RegLna);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
 
-    uint8_t zin  = (val & 0x80);      // Bit 7
-    uint8_t real = (val & 0x38) >> 3; // Bits 5-3 (Effective gain)
-    uint8_t set  = (val & 0x07);      // Bits 2-0 (Controlled gain)
+    // Extraction des bits 5-3 (Gain réel actuel)
+    uint8_t real = (val & 0x38) >> 3;
 
-    RFM69_printfs("[Impedance] : %s\r\n", (zin == 0x80) ? "200 Ohms" : "50 Ohms");
-
-    if (set == 0) printf("[LNA Mode] : AUTOMATIC (AGC)\r\n");
-    else          printf("[LNA Mode] : MANUAL (G%d force)\r\n", set);
-
-    RFM69_printfs("[Current Gain] : G%d\r\n", real);
-
+    return real;
 }
 
 /*
@@ -1217,3 +1216,5 @@ void Set_Pin_Output(void* GPIOx, uint16_t GPIO_Pin) {
 void Set_Pin_Input(void* GPIOx, uint16_t GPIO_Pin) {
     MCAL_RFM69H_SET_PIN_INPUT(GPIOx, GPIO_Pin);
 }
+
+
