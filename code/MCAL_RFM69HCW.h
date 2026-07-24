@@ -14,15 +14,15 @@
 #ifndef INC_MCAL_RFM69HCW_H_
 #define INC_MCAL_RFM69HCW_H_
 
-#include "stm32f4xx_hal.h"
+#include "stm32L4xx_hal.h"
 
 // Data pin (DATA)
 #define RFM_DATA_PIN            GPIO_PIN_4
 #define RFM_DATA_PORT           GPIOA
 
 // Clock pin (DCLK)
-#define RFM_DCLK_PIN            GPIO_PIN_12
-#define RFM_DCLK_PORT           GPIOF
+#define RFM_DCLK_PIN            GPIO_PIN_15
+#define RFM_DCLK_PORT           GPIOB
 #define RFM_DCLK_EXTI_IRQn      EXTI15_10_IRQn
 
 #define MCAL_RFM69H_INIT()                      do { } while(0)

@@ -15,7 +15,7 @@
 #ifndef INC_RFM69HCW_H_
 #define INC_RFM69HCW_H_
 
-#include "stm32f4xx_hal.h"
+#include "stm32L4xx_hal.h"
 #include <stdint.h>
 #include <stdio.h>
 #include  <string.h>
@@ -82,7 +82,7 @@
  * Activate And Deactivate all DEBUG PRINTF and Delay in one time !
  * You only need to comment or uncomment the line below
  */
-#define RFM69_DEBUG_ENABLED
+//#define RFM69_DEBUG_ENABLED
 #define CLEAR_LINE       "\033[K"
 #define CLEAR_SCREEN    "\033[2J"
 #define CURSOR_HOME     "\033[H"
@@ -105,11 +105,9 @@
     #define RFM69_INIT_DASHBOARD()
 #endif
 
-#ifdef RFM69_DEBUG_ENABLED
-    #define RFM69_Delay(...) MCAL_RFM69H_DELAY_MS(__VA_ARGS__)
-#else
-    #define RFM69_Delay(...)
-#endif
+
+#define RFM69_Delay(...) MCAL_RFM69H_DELAY_MS(__VA_ARGS__)
+
 
 // Couleurs
 #define R "\033[31m"  // Red
@@ -170,6 +168,11 @@ typedef enum {
 void RFM69_SetModulationType(RFM69_Modulation_t modulation);
 
 /*
+ * Get Modulation Type
+ */
+RFM69_Modulation_t RFM69_GetModulationType(void);
+
+/*
  * DataShaping
  */
 
@@ -207,6 +210,10 @@ void PRINT_ConfigData();
  */
 void RFM69_SetBitrate(uint32_t bitrate);
 
+/*
+ * Get Bitrate
+ */
+uint32_t RFM69_GetBitrate(void);
 /*
  * Automatic verification of word received
  */
@@ -298,6 +305,7 @@ typedef enum {
 } RFM69_PA_Select_t;
 void RFM69_PowerAmplifierSelection(RFM69_PA_Select_t pa, int8_t dbm_step);
 
+RFM69_PA_Select_t RFM69_GetPowerAmplifier(void);
 /*
  * Read RSSI in dBm
  */
@@ -335,7 +343,7 @@ void RFM69_SetLnaGain(RFM69_LnaGain_t gain);
 /*
  * Get LNA Status
  */
-void RFM69_GetLnaStatus(void);
+uint8_t RFM69_GetLnaGain(void);
 
 /*
  * GET AFC Correction Hz
@@ -506,4 +514,7 @@ void Set_Pin_Output(void* GPIOx, uint16_t GPIO_Pin);
  * SET PIN INPUT
  */
 void Set_Pin_Input(void* GPIOx, uint16_t GPIO_Pin);
+
+void SPI_Select_RFM69(void);
+void SPI_Deselect_RFM69(void);
 #endif /* INC_RFM69HCW_H_ */
