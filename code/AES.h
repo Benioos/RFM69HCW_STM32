@@ -8,7 +8,7 @@
 #ifndef INC_AES_H_
 #define INC_AES_H_
 
-#include "stm32f4xx_hal.h"
+#include "stm32L4xx_hal.h"
 #include <stdint.h>
 #include <stdio.h>
 #include  <string.h>
